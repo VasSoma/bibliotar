@@ -1,0 +1,9 @@
+Adatbázis felosztás:
+•	Felhasználó(id, név, cim, telfonszám, e-mail,jelszó(hash),roll)    Bogi   
+•	Könyv(Cim, Szerzö, isbn, db) Kölcsönözhető-e(igen,nem)      Bogi
+•	kölcsönzés(id, kezdő-lejárati dátum, hosszabbitás szám) +felhasználóid, +könyvid    Tamás
+•	birsag(birsagid, összeg, fizetésistátusz, dátum) +felhasználóid    Soma
+•	Lakcim(id, megye, irányitószám, vársos, utca, házszám)    Zsolti
+-------------------------------------------------------------------------------------------------------
+•	Szuper admin(teljes jog)
+•	Könyvtáros nénje(könyv hozzáadás delegálás stb)
