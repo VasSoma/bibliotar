@@ -4,6 +4,13 @@ Adatbázis felosztás:
 •	kölcsönzés(id, kezdő-lejárati dátum, hosszabbitás szám) +felhasználóid, +könyvid    Tamás
 •	birsag(birsagid, összeg, fizetésistátusz, dátum) +felhasználóid    Soma
 •	Lakcim(id, megye, irányitószám, vársos, utca, házszám)    Zsolti
--------------------------------------------------------------------------------------------------------
 •	Szuper admin(teljes jog)
 •	Könyvtáros nénje(könyv hozzáadás delegálás stb)
+-------------------------------------------------------------------------------------------------------
+Html+(css)
+Login: Tamás
+Reg.Felhasz: Soma  
+Sima Felhasz: Tamás 
+Könyvtáros nénje: Zsolti
+Admin: Bogi
+-------------------------------------------------------------------------------------------------------
