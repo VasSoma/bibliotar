@@ -5,5 +5,14 @@ Adatbázis felosztás:
 •	birsag(birsagid, összeg, fizetésistátusz, dátum) +felhasználóid    Soma
 •	Lakcim(id, megye, irányitószám, vársos, utca, házszám)    Zsolti
 -------------------------------------------------------------------------------------------------------
-•	Szuper admin(teljes jog)
-•	Könyvtáros nénje(könyv hozzáadás delegálás stb)
+•	Regisztrált Felgasználó: 2x tud hosszabitani, Rendelés előzmények
+•	Nem regisztrált Felhasználo: Csak kölcsönzés +regisztrálnini tud
+•	könyvtáro: kölcsönzés idő hossz (felhasználónak)(ha több mint 2), könyv kölcsönzése felhasználüónak, köny visszavétel, birság kiosztás,(python), könyvek előjegyzése mielött megjelenik, részletes könyv keresés,
+•	Admin: uj könyv, köny állapot módositás, adatok modositása,
+-------------------------------------------------------------------------------------------------------
+Front
+•login - Tamás 
+•reg + unreg user - Tamás 
+•knyvtáros - bogi
+•admin - bogi 
+-------------------------------------------------------------------------------------------------------
