@@ -1,4 +1,4 @@
-from backend.main import bp
+from . import bp
 
 @bp.route('/')
 def index():
