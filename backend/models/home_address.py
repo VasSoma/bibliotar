@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String,Integer
 from typing import List,Optional
 
-class User(db.Model):
+class Home_address(db.Model):
     __tablename__ = "home_address"
 
     address_id : Mapped[int] = mapped_column(primary_key=True)
@@ -13,3 +13,5 @@ class User(db.Model):
     city : Mapped[str] = mapped_column(String(255))
     street : Mapped[str] = mapped_column(String(100))
     house_number : Mapped[str] = mapped_column(String(10))
+
+    user: Mapped["User"] = relationship(back_populates="Home_address",lazy=True)
