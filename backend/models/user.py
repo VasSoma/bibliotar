@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String,Integer
 from typing import List,Optional
 
-UserRole = Table(
+UserRole = Table( # connection table, help with user <-> user_roles.user_id <-> user_roles.roles_id <-> roles.role_id easier usage
     "users_roles",
     Base.metadata, # system get info rom the base class
     Column("user_id",ForeignKey("users.user_id")),
