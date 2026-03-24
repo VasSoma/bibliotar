@@ -4,7 +4,7 @@ from sqlalchemy.types import String,Integer
 from typing import List,Optional
 
 class User(db.Model):
-    __tablename__ : "home_address"
+    __tablename__ = "home_address"
 
     address_id : Mapped[int] = mapped_column(primary_key=True)
     user_id : Mapped[str] = mapped_column(String(20))
