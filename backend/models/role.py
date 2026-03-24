@@ -1,5 +1,5 @@
 from sqlalchemy import ForeignKey
-
+from .user import UserRole
 
 from ..extensions import db, Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -11,3 +11,5 @@ class Role(db.Model):
 
     role_id : Mapped[int] = mapped_column(primary_key=True)
     role_name : Mapped[str] = mapped_column(String(100))
+
+    users : Mapped[List["User"]] = relationship(secondary=UserRole,back_populates="roles")
