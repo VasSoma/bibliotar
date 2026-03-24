@@ -6,9 +6,9 @@ from typing import List,Optional
 class User(db.Model):
     __tablename__ : "users"
 
-    user_id : Mapped[int] = mapped_column(Integer)
+    user_id : Mapped[int] = mapped_column(primary_key=True)
     role : Mapped[str] = mapped_column(String(20))
     password_hashed : Mapped[str] = mapped_column(String(255))
     phone_number : Mapped[Optional[str]] = mapped_column(String(15))
     address : Mapped[str] = mapped_column(String(100))
-    name : Mapped[str]
+    name : Mapped[str] = mapped_column(String(100)) 
