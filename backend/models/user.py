@@ -1,12 +1,19 @@
 
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Table, Column
 
 
 from ..extensions import db, Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String,Integer
 from typing import List,Optional
+
+UserRole = Table(
+    "users_roles",
+    Base.metadata, # system get info rom the base class
+    Column("user_id",ForeignKey("users.user_id")),
+    Column("role_id",ForeignKey("roles.role_id"))
+)
 
 class User(db.Model):
     __tablename__ = "users"
@@ -20,6 +27,7 @@ class User(db.Model):
     address_id : Mapped[int] = mapped_column(ForeignKey("home_address.address_id"))
     address : Mapped["Home_address"] = relationship(back_populates="User",lazy=True) # chain request not req. bc this ; contain a class
 
+    roles : Mapped[List["Role"]] = relationship(secondary=UserRole,back_populates="users")
 # address_email = address.user.email
 
 
