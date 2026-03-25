@@ -11,7 +11,7 @@ def create_app(config_class=Config): #got a config.py
     from flask_migrate import Migrate
     migrate = Migrate(app,db) # helper, modify database if smt changed
 
-    from ..main import bp
+    from ..blueprint import bp
     app.register_blueprint(bp) # regist blueprint with bp
 
     return app
