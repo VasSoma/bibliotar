@@ -25,8 +25,8 @@ class User(db.Model):
     name : Mapped[str] = mapped_column(String(100)) 
 
     address_id : Mapped[int] = mapped_column(ForeignKey("home_address.address_id"))
-    address : Mapped["Home_address"] = relationship(back_populates="User",lazy=True) # chain request not req. bc this ; contain a class
-
+    address : Mapped["Home_address"] = relationship(back_populates="user",lazy=True) # chain request not req. bc this ; contain a class
+                                                        #"user" mean in home_address.py user variable name
     roles : Mapped[List["Role"]] = relationship(secondary=UserRole,back_populates="users")
 # address_email = address.user.email
 
