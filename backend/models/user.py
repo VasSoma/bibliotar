@@ -1,7 +1,7 @@
 
 
 from sqlalchemy import ForeignKey, Table, Column
-
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from ..extensions import db, Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -30,7 +30,11 @@ class User(db.Model):
     roles : Mapped[List["Role"]] = relationship(secondary=UserRole,back_populates="users")
 # address_email = address.user.email
 
+    def set_password(self,password_hashed):
+        self.password_hashed = generate_password_hash(password_hashed)
 
+    def set_password(self,password_hashed):
+        return check_password_hash(self.password_hashed,password_hashed)
 
 
 
