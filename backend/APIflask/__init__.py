@@ -3,7 +3,7 @@ from config import Config
 from .extensions import db
 
 def create_app(config_class=Config): #got a config.py
-    app = APIFlask(__name__,json_errors=True,title="Bibliotar_API") #gen flask obj
+    app = APIFlask(__name__,json_errors=True,title="Bibliotar_API",docs_path="/swagger") #generate apiflask obj
     app.config.from_object(config_class) # setup flask with config.py
 
     db.init_app(app) # flask + database connection
