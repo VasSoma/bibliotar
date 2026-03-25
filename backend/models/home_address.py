@@ -1,6 +1,6 @@
 from sqlalchemy import ForeignKey
 
-from ..extensions import db, Base
+from ..APIflask.extensions import db, Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String,Integer
 from typing import List,Optional
