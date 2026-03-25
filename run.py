@@ -1,4 +1,4 @@
-from flask import Flask
+from apiflask import APIFlask
 from config import Config
 from backend import create_app
 
