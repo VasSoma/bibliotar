@@ -3,7 +3,7 @@
 from sqlalchemy import ForeignKey, Table, Column
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from ..extensions import db, Base
+from ..APIflask.extensions import db, Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String,Integer
 from typing import List,Optional
@@ -33,7 +33,7 @@ class User(db.Model):
     def set_password(self,password_hashed):
         self.password_hashed = generate_password_hash(password_hashed)
 
-    def set_password(self,password_hashed):
+    def check_password(self,password_hashed):
         return check_password_hash(self.password_hashed,password_hashed)
 
 
