@@ -1,12 +1,9 @@
-
-
-from sqlalchemy import Boolean, ForeignKey, Table, Column
-from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import Boolean, ForeignKey, Column
 from datetime import date
-from ..extensions import db, Base
+from ..extensions import db
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String,Integer, Boolean, Date
-from typing import List,Optional
+from typing import List
 
 class Fines(db.Model):
     __tablename__ = "fines"
