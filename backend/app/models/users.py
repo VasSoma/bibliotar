@@ -1,8 +1,5 @@
-
-
 from sqlalchemy import ForeignKey, Table, Column
 from werkzeug.security import generate_password_hash, check_password_hash
-
 from ..extensions import db, Base
 from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
 from sqlalchemy.types import String,Integer
