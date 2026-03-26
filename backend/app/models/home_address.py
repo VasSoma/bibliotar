@@ -16,5 +16,5 @@ class Home_address(db.Model):
     house_number : Mapped[str] = mapped_column(String(10))
     # user_id : Mapped[int] = mapped_column(ForeignKey("users.user_id"))
 
-    user: Mapped["User"] = relationship(back_populates="address",lazy=True)
+    user: Mapped["User"] = relationship(back_populates="address",lazy=True,uselist=False)
                                         #"address" mean in user.py address variable name
