@@ -1,0 +1,13 @@
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+
+class Base(DeclarativeBase):
+    pass
+
+class UsersRoles(Base):
+    __tablename__ = "users_roles"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), primary_key=True)
+    role_id: Mapped[int] = mapped_column(ForeignKey("roles.role_id"), primary_key=True)
