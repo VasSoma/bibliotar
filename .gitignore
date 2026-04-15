@@ -1,9 +1,1 @@
-*.pyc
-migrations/alembic.ini
-migrations/env.py
-migrations/script.py.mako
-migrations/README
-/migrations
-/BibliotarVENV
-/.vs
-/.vscode
+
