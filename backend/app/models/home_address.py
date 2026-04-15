@@ -1,9 +1,9 @@
 from sqlalchemy import ForeignKey
 
-from ..extensions import db, Base
+from ..extensions import db
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String,Integer
-from typing import List,Optional
+from typing import List
 
 class Home_address(db.Model):
     __tablename__ = "home_address"

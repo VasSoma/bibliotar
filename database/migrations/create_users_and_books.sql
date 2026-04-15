@@ -4,7 +4,8 @@ create table user (
 	address varchar(100) not null,
 	phone_number  varchar(15) not null,
 	password_hashed varchar(255) not null,
-	role varchar(20) default 'user'
+	role varchar(20) default 'user',
+	email varchar(255)
 );
 
 create table book (

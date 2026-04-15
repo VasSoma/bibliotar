@@ -1,1 +1,10 @@
 
+# Virtual environment
+.venv/
+venv/
+env/
+
+# PyCharm
+.idea/
+/.vs
+/.vscode

@@ -1,8 +1,5 @@
-
-
 from sqlalchemy import ForeignKey, Table, Column
 from werkzeug.security import generate_password_hash, check_password_hash
-
 from ..extensions import db, Base
 from sqlalchemy.orm import Mapped, foreign, mapped_column, relationship
 from sqlalchemy.types import String,Integer
@@ -22,7 +19,8 @@ class User(db.Model):
     role : Mapped[str] = mapped_column(String(20))
     password_hashed : Mapped[str] = mapped_column(String(255))
     phone_number : Mapped[Optional[str]] = mapped_column(String(15))
-    name : Mapped[str] = mapped_column(String(100)) 
+    name : Mapped[str] = mapped_column(String(100))
+    email : Mapped[str] = mapped_column(String(255))
 
     address_id : Mapped[int] = mapped_column(ForeignKey("home_address.address_id"))
     address : Mapped["Home_address"] = relationship(back_populates="user",lazy=True) # chain request not req. bc this ; contain a class
