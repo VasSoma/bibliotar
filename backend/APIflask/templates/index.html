@@ -24,7 +24,7 @@
                 <div>
                     <h3>Login</h3>
                     <form @submit.prevent="login">
-                        <input type="text" v-model="loginData.username" placeholder="Name" required><br><br>
+                        <input type="text" v-model="loginData.username" placeholder="Full Name" required><br><br>
                         <input type="password" v-model="loginData.password" placeholder="Password" required><br><br>
                         <button type="submit">Login</button>
                     </form>
@@ -33,6 +33,7 @@
                 <div>
                     <h3>Register</h3>
                     <form @submit.prevent="register">
+                        <input type="text" v-model="registerData.name" placeholder="Full Name" required><br><br>
                         <input type="email" v-model="registerData.email" placeholder="Email" required><br><br>
                         <input type="password" v-model="registerData.password" placeholder="Password" required><br><br>
                         <input type="text" v-model="registerData.address" placeholder="Address" required><br><br>
@@ -92,7 +93,7 @@
     </div>
     {% endraw %}
     <script>
-        const { createApp } = Vue
+        const { createApp } = 
         const API_BASE = ''; 
 
         createApp({
@@ -105,7 +106,7 @@
                     messageType: '',
                     searchQuery: '',
                     loginData: { username: '', password: '' },
-                    registerData: { email: '', password: '', address: '', phone: '' },
+                    registerData: { name: '', email: '', password: '', address: '', phone: '' },
                     guestData: {} 
                 }
             },
@@ -128,7 +129,7 @@
                             }
                         });
                     } catch (error) {
-                        this.showMessage("Faszo API NIIIINCS", 'error');
+                        this.showMessage("Hiba a könyvek betöltésekor (Vagy az API még nem létezik).", 'error');
                     }
                 },
                 
@@ -144,13 +145,13 @@
                         if (response.ok && result.success !== false) {
                             this.loggedIn = true;
                             this.currentUser = this.loginData.username; 
-                            this.showMessage('AZTA itt vagyol!');
+                            this.showMessage('Sikeres belépés!');
                             this.loginData = { username: '', password: '' }; 
                         } else {
-                            this.showMessage(result.message || 'buta vagyol!', 'error');
+                            this.showMessage(result.message || 'Hibás adatok!', 'error');
                         }
                     } catch (error) {
-                        this.showMessage("kUKA SERVER.", 'error');
+                        this.showMessage("Szerver hiba.", 'error');
                     }
                 },
 
@@ -161,12 +162,16 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(this.registerData)
                         });
+                        
                         if (response.ok) {
-                            this.showMessage('ügyes vagy nyaljalak meg');
-                            this.registerData = { email: '', password: '', address: '', phone: '' }; 
+                            this.showMessage('Sikeres regisztráció! Most már bejelentkezhetsz.');
+                            this.registerData = { name: '', email: '', password: '', address: '', phone: '' }; 
+                        } else {
+                            const result = await response.json();
+                            this.showMessage(result.message || 'Hiba regisztrációkor.', 'error');
                         }
                     } catch (error) {
-                        this.showMessage("Jaj no registration fo u bad.", 'error');
+                        this.showMessage("Szerver hiba regisztrációkor.", 'error');
                     }
                 },
 
