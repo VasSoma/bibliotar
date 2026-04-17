@@ -7,4 +7,4 @@ class Config:
 #!!!!!!!!!!!!!!!!!!!!!! LIVE SERVER  !!!!!!!!!!!!!!!!!!!!!!
     # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres.audkhglijhnoiikgqrgj:Bibliotar123?@aws-1-eu-west-1.pooler.supabase.com:5432/postgres' 
 
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
