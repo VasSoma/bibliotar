@@ -1,0 +1,24 @@
+Adatbázis felosztás:
+•	Felhasználó(id, név, cim, telfonszám, e-mail,jelszó(hash),roll)    Bogi   
+•	Könyv(Cim, Szerzö, isbn, db) Kölcsönözhető-e(igen,nem)      Bogi
+•	kölcsönzés(id, kezdő-lejárati dátum, hosszabbitás szám) +felhasználóid, +könyvid    Tamás
+•	birsag(birsagid, összeg, fizetésistátusz, dátum) +felhasználóid    Soma
+•	Lakcim(id, megye, irányitószám, vársos, utca, házszám)    Zsolti
+-------------------------------------------------------------------------------------------------------
+•	Regisztrált Felgasználó: 2x tud hosszabitani, Rendelés előzmények
+•	Nem regisztrált Felhasználo: Csak kölcsönzés +regisztrálnini tud
+•	könyvtáro: kölcsönzés idő hossz (felhasználónak)(ha több mint 2), könyv kölcsönzése felhasználüónak, köny visszavétel, birság kiosztás,(python), könyvek előjegyzése mielött megjelenik, részletes könyv keresés,
+•	Admin: uj könyv, köny állapot módositás, adatok modositása,
+-------------------------------------------------------------------------------------------------------
+Front
+•login - Tamás 
+•reg + unreg user - Tamás 
+•knyvtáros - Bogi
+•admin - Bogi 
+-------------------------------------------------------------------------------------------------------
+Back
+•Könyvtáros - Zsolt
+•Regisztrált felhasználó - Soma
+•Nem Regisztrált felhasználó - Soma
+•Admin - Zsolt
+-------------------------------------------------------------------------------------------------------
