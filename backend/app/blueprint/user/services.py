@@ -35,9 +35,7 @@ class UserService:
     @staticmethod
     def update_profile(user_id, data):
         try:
-            user = db.session.execute(
-                select(User).filter_by(user_id=user_id)
-            ).scalar_one_or_none()
+            user = db.session.execute(select(User).filter_by(user_id=user_id)).scalar_one_or_none()
             if not user:
                 return False, "User not found"
 
