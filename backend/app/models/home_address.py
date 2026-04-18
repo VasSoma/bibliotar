@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String
 from typing import List
 
+
 class Home_address(db.Model):
     __tablename__ = "home_address"
 
