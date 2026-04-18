@@ -39,21 +39,23 @@ class UserService:
             if not user:
                 return False, "User not found"
 
-            user.name = data["name"]
-            user.email = data["email"]
-            user.phone_number = data["phone_number"]
+            if "name" in data:
+                user.name = data["name"]
+            if "email" in data:
+                user.email = data["email"]
+            if "phone_number" in data:
+                user.phone_number = data["phone_number"]
 
-            if user.addresses:
-                address = user.addresses[0]
-                for key, value in data["address"].items():
-                    setattr(address, key, value)
-            else:
-                address = Home_address(**data["address"])
-                user.addresses.append(address)
+            if "address" in data and data["address"]:
+                if user.addresses:
+                    for key, value in data["address"].items():
+                        setattr(user.addresses[0], key, value)
+                else:
+                    user.addresses.append(Home_address(**data["address"]))
 
             db.session.commit()
 
-            addr = user.addresses[0]
+            addr = user.addresses[0] if user.addresses else None
             return True, {
                 "name": user.name,
                 "email": user.email,
@@ -64,7 +66,7 @@ class UserService:
                     "city": addr.city,
                     "street": addr.street,
                     "house_number": addr.house_number
-                }
+                } if addr else None
             }
         except Exception as e:
             db.session.rollback()
