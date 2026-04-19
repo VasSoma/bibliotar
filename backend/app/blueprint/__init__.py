@@ -45,4 +45,7 @@ bp.register_blueprint(auth_bp, url_prefix='/auth')
 from .loans import bp as loans_bp
 bp.register_blueprint(loans_bp, url_prefix='/loans')
 
+from .books import bp as books_bp
+bp.register_blueprint(books_bp, url_prefix='/books')
+
 from ..models import *
