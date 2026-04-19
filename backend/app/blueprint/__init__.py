@@ -3,10 +3,10 @@ from datetime import datetime
 from flask import current_app
 from apiflask import APIBlueprint, HTTPError
 from authlib.jose import jwt
-from ..extensions import auth
+from flask import render_template
+from ..extensions import auth as _auth
 
-
-@auth.verify_token
+@_auth.verify_token
 def verify_token(token):
     try:
         data = jwt.decode(token.encode('ascii'), current_app.config['SECRET_KEY'])
@@ -21,7 +21,7 @@ def role_required(roles):
     def wrapper(fn):
         @functools.wraps(fn)
         def decorated(*args, **kwargs):
-            user_roles = [r["role_name"] for r in auth.current_user.get("roles", [])]
+            user_roles = [r["role_name"] for r in _auth.current_user.get("roles", [])]
             if any(role in user_roles for role in roles):
                 return fn(*args, **kwargs)
             raise HTTPError(403, "Access denied")
@@ -30,11 +30,6 @@ def role_required(roles):
 
 
 bp = APIBlueprint('main', __name__, tag="main")
-
-@bp.route('/')
-def index():
-    return 'This is The Main Blueprint'
-
 
 from .user import bp as user_bp
 bp.register_blueprint(user_bp, url_prefix='/user')
