@@ -3,13 +3,8 @@ from datetime import datetime
 from flask import current_app
 from apiflask import APIBlueprint, HTTPError
 from authlib.jose import jwt
-<<<<<<< Updated upstream
-from ..extensions import auth
 from flask import render_template
-=======
 from ..extensions import auth as _auth
->>>>>>> Stashed changes
-
 
 @_auth.verify_token
 def verify_token(token):
