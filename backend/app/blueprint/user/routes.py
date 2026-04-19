@@ -1,15 +1,29 @@
 from ..user import bp
+from apiflask import HTTPError
+from .. import role_required
+from ...extensions import auth
+from .schemas import ProfileUpdateRequestSchema, ProfileUpdateResponseSchema, UserResponseSchema
+from .services import UserService
 
-# @bp.output(UserResponseSchema(many=True)) #if the answer is a list
 
-# @bp.input(UserRequestSchema,location = "query")
-# def user_registrate(query_data):
-#     pass
+@bp.get("/profile")
+@bp.auth_required(auth)
+@bp.output(UserResponseSchema)
+def get_profile():
+    user_id = auth.current_user.get("user_id")
+    success, response = UserService.get_profile(user_id)
+    if success:
+        return response, 200
+    raise HTTPError(404, response)
 
-# @bp.post("/registrate=<int:id>")
-# def user_registrate(data,id):
-#     pass
 
-@bp.route('/')
-def user_index():
-    return 'This is The USER Blueprint'
+@bp.patch("/profile")
+@bp.auth_required(auth)
+@bp.input(ProfileUpdateRequestSchema, location="json")
+@bp.output(ProfileUpdateResponseSchema)
+def update_profile(json_data):
+    user_id = auth.current_user.get("user_id")
+    success, response = UserService.update_profile(user_id, json_data)
+    if success:
+        return response, 200
+    raise HTTPError(400, response)
