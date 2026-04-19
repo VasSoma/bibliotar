@@ -8,7 +8,8 @@ from .services import UserService
 
 @bp.get("/profile")
 @bp.auth_required(auth) ### <---- Authentication need
-@bp.output(UserResponseSchema) 
+@bp.output(UserResponseSchema)
+@role_required(["admin"]) ### <---- Only admin 
 def get_profile():
     user_id = auth.current_user.get("user_id")
     success, response = UserService.get_profile(user_id)
