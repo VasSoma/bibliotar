@@ -7,8 +7,8 @@ from .services import UserService
 
 
 @bp.get("/profile")
-@bp.auth_required(auth)
-@bp.output(UserResponseSchema)
+@bp.auth_required(auth) ### <---- Authentication need
+@bp.output(UserResponseSchema) 
 def get_profile():
     user_id = auth.current_user.get("user_id")
     success, response = UserService.get_profile(user_id)
