@@ -5,6 +5,8 @@ from ...models.loan import Loan
 from ...models.fines import Fines
 
 MAX_USER_EXTENSIONS = 2
+USER_EXTENSION_DAYS = 1
+LIBRARIAN_EXTENSION_DAYS = 7
 
 
 class LoansService:
@@ -55,13 +57,18 @@ class LoansService:
             if not loan:
                 return False, "Loan not found"
 
-            if "user" in role_names:
+            if "librarian" in role_names:
+                extension_days = LIBRARIAN_EXTENSION_DAYS
+            elif "user" in role_names:
                 if loan.user_id != requester_id:
                     return False, "Access denied"
                 if loan.extension_count >= MAX_USER_EXTENSIONS:
                     return False, f"Maximum {MAX_USER_EXTENSIONS} extensions allowed"
+                extension_days = USER_EXTENSION_DAYS
+            else:
+                return False, "Access denied"
 
-            loan.due_date = loan.due_date + timedelta(days=7)
+            loan.due_date = loan.due_date + timedelta(days=extension_days)
             loan.extension_count += 1
             db.session.commit()
 
