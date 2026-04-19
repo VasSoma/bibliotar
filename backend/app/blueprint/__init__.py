@@ -4,6 +4,7 @@ from flask import current_app
 from apiflask import APIBlueprint, HTTPError
 from authlib.jose import jwt
 from ..extensions import auth
+from flask import render_template
 
 
 @auth.verify_token
@@ -30,11 +31,6 @@ def role_required(roles):
 
 
 bp = APIBlueprint('main', __name__, tag="main")
-
-@bp.route('/')
-def index():
-    return 'This is The Main Blueprint'
-
 
 from .user import bp as user_bp
 bp.register_blueprint(user_bp, url_prefix='/user')
