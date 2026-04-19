@@ -3,11 +3,15 @@ from datetime import datetime
 from flask import current_app
 from apiflask import APIBlueprint, HTTPError
 from authlib.jose import jwt
+<<<<<<< Updated upstream
 from ..extensions import auth
 from flask import render_template
+=======
+from ..extensions import auth as _auth
+>>>>>>> Stashed changes
 
 
-@auth.verify_token
+@_auth.verify_token
 def verify_token(token):
     try:
         data = jwt.decode(token.encode('ascii'), current_app.config['SECRET_KEY'])
@@ -22,7 +26,7 @@ def role_required(roles):
     def wrapper(fn):
         @functools.wraps(fn)
         def decorated(*args, **kwargs):
-            user_roles = [r["role_name"] for r in auth.current_user.get("roles", [])]
+            user_roles = [r["role_name"] for r in _auth.current_user.get("roles", [])]
             if any(role in user_roles for role in roles):
                 return fn(*args, **kwargs)
             raise HTTPError(403, "Access denied")
