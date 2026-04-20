@@ -18,8 +18,8 @@ def create_app(config_class=Config):
     from .blueprint import bp as main_bp
     app.register_blueprint(main_bp, url_prefix='/api')
 
-    @app.get('/')
-    def index():
-        return render_template('index.html')
+    # @app.get('/')
+    # def index():
+    #     return render_template('index.html')
 
     return app
