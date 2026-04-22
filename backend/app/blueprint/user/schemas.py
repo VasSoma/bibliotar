@@ -19,10 +19,10 @@ class UserResponseSchema(Schema):
 
 
 class ProfileUpdateRequestSchema(Schema):
-    name = fields.String(required=True)
-    email = fields.String(required=True)
-    phone_number = fields.String(required=True)
-    address = fields.Nested(AddressSchema, required=True)
+    name = fields.String()
+    email = fields.String()
+    phone_number = fields.String()
+    address = fields.Nested(AddressSchema)
 
 
 class ProfileUpdateResponseSchema(Schema):
