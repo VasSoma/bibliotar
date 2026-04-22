@@ -1,4 +1,5 @@
 from apiflask import APIFlask
+from flask import render_template
 from .config import Config
 from .extensions import db
 from flask_cors import CORS
@@ -17,8 +18,8 @@ def create_app(config_class=Config):
     from .blueprint import bp as main_bp
     app.register_blueprint(main_bp, url_prefix='/api')
 
-    @app.route("/")
-    def hello_world():
-        return "<p>Hello, World!</p>"
+    # @app.get('/')
+    # def index():
+    #     return render_template('index.html')
 
     return app
