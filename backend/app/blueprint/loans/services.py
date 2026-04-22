@@ -4,6 +4,8 @@ from ...extensions import db
 from ...models.loan import Loan
 from ...models.fines import Fines
 
+DAILY_FINE_AMOUNT = 1
+
 MAX_USER_EXTENSIONS = 2
 USER_EXTENSION_DAYS = 1
 LIBRARIAN_EXTENSION_DAYS = 7
@@ -28,6 +30,12 @@ class LoansService:
 
             result = []
             for loan in loans:
+                if loan.return_date:
+                    overdue_fine = None
+                else:
+                    overdue_days = max(0, (datetime.now() - loan.due_date).days)
+                    overdue_fine = overdue_days * DAILY_FINE_AMOUNT if overdue_days > 0 else None
+
                 result.append({
                     "loan_id": loan.loan_id,
                     "user_id": loan.user_id,
@@ -38,7 +46,9 @@ class LoansService:
                     },
                     "start_date": loan.start_date,
                     "due_date": loan.due_date,
-                    "extension_count": loan.extension_count
+                    "return_date": loan.return_date,
+                    "extension_count": loan.extension_count,
+                    "overdue_fine": overdue_fine
                 })
 
             return True, result
@@ -99,6 +109,23 @@ class LoansService:
                 return False, "Loan already returned"
 
             loan.return_date = datetime.now()
+
+            overdue_days = max(0, (loan.return_date - loan.due_date).days)
+            if overdue_days > 0:
+                fine = db.session.execute(
+                    select(Fines).filter_by(loan_id=loan_id, is_paid=False)
+                ).scalar_one_or_none()
+                if fine:
+                    fine.amount = overdue_days * DAILY_FINE_AMOUNT
+                else:
+                    fine = Fines(
+                        loan_id=loan.loan_id,
+                        user_id=loan.user_id,
+                        amount=overdue_days * DAILY_FINE_AMOUNT,
+                        is_paid=False
+                    )
+                    db.session.add(fine)
+
             db.session.commit()
 
             return True, {

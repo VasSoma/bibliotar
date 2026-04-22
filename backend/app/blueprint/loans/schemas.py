@@ -13,7 +13,9 @@ class LoanResponseSchema(Schema):
     book = fields.Nested(BookInLoanSchema)
     start_date = fields.DateTime()
     due_date = fields.DateTime()
+    return_date = fields.DateTime(allow_none=True)
     extension_count = fields.Integer()
+    overdue_fine = fields.Integer(allow_none=True)
 
 
 class ExtendResponseSchema(Schema):
