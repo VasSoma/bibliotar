@@ -1,7 +1,9 @@
+from .. import role_required
 from ..loans import bp
 from apiflask import HTTPError
 from ...extensions import auth
-from .schemas import LoanResponseSchema, ExtendResponseSchema, ReturnResponseSchema, FinePaidResponseSchema
+from .schemas import LoanResponseSchema, ExtendResponseSchema, ReturnResponseSchema, FinePaidResponseSchema, \
+    LoanRequestSchema
 from .services import LoansService
 
 
@@ -53,3 +55,11 @@ def fine_paid(loan_id):
     if success:
         return response, 200
     raise HTTPError(400, response)
+
+@bp.post("history/create")
+@bp.input(LoanRequestSchema)
+@bp.output(LoanResponseSchema)
+@bp.auth_required(auth)
+@role_required(["user", "librarian"])
+def create_loan(json_data):
+    return LoansService.create_loan(json_data)
