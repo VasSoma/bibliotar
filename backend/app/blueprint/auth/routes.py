@@ -3,7 +3,7 @@ from apiflask import HTTPError
 from .schemas import LoginRequestSchema, LoginResponseSchema, RegisterRequestSchema, RegisterResponseSchema
 from .services import AuthService
 from .. import role_required
-from ..user.schemas import RoleResponseSchema
+from ..user.schemas import RoleRequestSchema, SetRoleResponseSchema, GetRoleResponseSchema, DeleteRoleRequestSchema
 from ...extensions import auth
 
 
@@ -36,13 +36,28 @@ def logout():
 @bp.get("/get_roles")
 @bp.auth_required(auth)
 @role_required(["admin"])
-@bp.output(RoleResponseSchema(many=True))
+@bp.output(GetRoleResponseSchema(many=True))
 def get_roles():
     return AuthService.get_roles()
 
 @bp.get("/get_roles/<int:user_id>")
 @bp.auth_required(auth)
 @role_required(["admin"])
-@bp.output(RoleResponseSchema(many=True))
+@bp.output(GetRoleResponseSchema(many=True))
 def get_roles_by_user_id(user_id):
     return AuthService.get_roles_by_user_id(user_id)
+
+@bp.post("/set_role")
+@bp.input(RoleRequestSchema)
+@bp.output(SetRoleResponseSchema)
+@bp.auth_required(auth)
+@role_required(["admin"])
+def set_role(json_data):
+    return AuthService.set_role(json_data)
+
+@bp.delete("/delete_role")
+@bp.auth_required(auth)
+@role_required(["admin"])
+@bp.input(DeleteRoleRequestSchema)
+def delete_role(json_data):
+    return AuthService.delete_role(json_data)
