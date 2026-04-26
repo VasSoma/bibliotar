@@ -2,6 +2,8 @@ from . import bp
 from apiflask import HTTPError
 from .schemas import LoginRequestSchema, LoginResponseSchema, RegisterRequestSchema, RegisterResponseSchema
 from .services import AuthService
+from .. import role_required
+from ..user.schemas import RoleResponseSchema
 from ...extensions import auth
 
 
@@ -30,3 +32,10 @@ def register(json_data):
 @bp.output({}, status_code=200)
 def logout():
     return {}, 200
+
+@bp.get("/get_roles")
+@bp.auth_required(auth)
+@role_required(["admin"])
+@bp.output(RoleResponseSchema(many=True))
+def get_roles():
+    return AuthService.get_roles()

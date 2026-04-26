@@ -7,6 +7,8 @@ from ...models.users import User
 from ...models.home_address import Home_address
 from ...models.role import Role
 from .schemas import RoleSchema
+from apiflask import HTTPError
+from ...models.users import UserRole
 
 
 class AuthService:
@@ -76,3 +78,33 @@ class AuthService:
         except Exception as e:
             db.session.rollback()
             return False, f"Registration failed: {e}"
+
+    @staticmethod
+    def set_role(user_id, role_id):
+        user = User.query.get(user_id)
+        if not user:
+            raise HTTPError(404, "User not found.")
+
+        role = Role.query.get(role_id)
+        if not role:
+            raise HTTPError(404, "Role not found.")
+
+        new_role = UserRole(user_id = user_id, role_id = role_id)
+        db.session.add(new_role)
+        db.session.commit()
+
+        return new_role
+
+    @staticmethod
+    def get_roles_by_user_id(user_id):
+        if user_id is not None:
+            user = User.query.get(user_id)
+            return [role.name for role in user.roles]
+        raise HTTPError(404, "User not found.")
+
+    @staticmethod
+    def get_roles():
+        roles = Role.query.all()
+        if not roles:
+            raise HTTPError(404, "Roles table is empty.")
+        return roles
