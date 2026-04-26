@@ -39,3 +39,10 @@ def logout():
 @bp.output(RoleResponseSchema(many=True))
 def get_roles():
     return AuthService.get_roles()
+
+@bp.get("/get_roles/<int:user_id>")
+@bp.auth_required(auth)
+@role_required(["admin"])
+@bp.output(RoleResponseSchema(many=True))
+def get_roles_by_user_id(user_id):
+    return AuthService.get_roles_by_user_id(user_id)

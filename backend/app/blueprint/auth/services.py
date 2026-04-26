@@ -97,10 +97,10 @@ class AuthService:
 
     @staticmethod
     def get_roles_by_user_id(user_id):
-        if user_id is not None:
-            user = User.query.get(user_id)
-            return [role.name for role in user.roles]
-        raise HTTPError(404, "User not found.")
+        user = User.query.get(user_id)
+        if not user:
+            raise HTTPError(404, "User not found.")
+        return user.roles
 
     @staticmethod
     def get_roles():
