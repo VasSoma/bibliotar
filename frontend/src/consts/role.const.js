@@ -1,3 +1,4 @@
-export const ROLE_USER = 'user'
-export const ROLE_ADMIN = 'admin'
-export const ROLE_LIBRARIAN = 'librarian'
+export const ROLES = {
+  USER: 'user',
+  ADMIN: 'admin'
+};

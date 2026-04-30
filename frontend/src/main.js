@@ -1,18 +1,13 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import { setupApiClient } from '@/api-client/interceptors'
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+import router from './router';
 
-import App from './App.vue'
-import router from './router'
-import { useAuthStore } from './stores/auth'
+import './api-client/interceptors'; 
 
-const app = createApp(App)
-app.use(createPinia())
+const app = createApp(App);
 
-setupApiClient()
+app.use(createPinia());
+app.use(router);
 
-const auth = useAuthStore()
-await auth.fetchUser()
-
-app.use(router)
-app.mount('#app')
+app.mount('#app');
