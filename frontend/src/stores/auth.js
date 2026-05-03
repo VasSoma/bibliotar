@@ -1,46 +1,51 @@
-import { defineStore } from 'pinia';
-import { apiClient } from '../api-client/api.client';
+import { computed, ref } from 'vue'
+import { defineStore } from 'pinia'
+import { api } from '@/api-client/api.client'
+import router from '@/router'
 
-export const useAuthStore = defineStore('auth', {
-  state: () => ({
-    user: null,
-    token: localStorage.getItem('token') || null,
-    userId: localStorage.getItem('user_id') || null,
-  }),
-  getters: {
-    isAuthenticated: (state) => !!state.token,
-  },
-  actions: {
-    async login(email, password) {
-      const response = await apiClient.post('/api/auth/login', { email, password });
-      this.token = response.data.token;
-      this.userId = response.data.user_id;
-      this.user = { 
-        email: response.data.email, 
-        name: response.data.name, 
-        role: response.data.role 
-      };
-      
-      localStorage.setItem('token', this.token);
-      localStorage.setItem('user_id', this.userId);
-    },
-    async register(userData) {
-      await apiClient.post('/api/auth/register', userData);
-    },
-    async logout() {
-      try {
-        if (this.token) {
-          await apiClient.post('/api/auth/logout');
-        }
-      } catch (e) {
-        console.error('Kijelentkezési hiba:', e);
-      } finally {
-        this.token = null;
-        this.user = null;
-        this.userId = null;
-        localStorage.removeItem('token');
-        localStorage.removeItem('user_id');
-      }
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref(null)
+  const isAuthenticated = computed(() => !!user.value)
+  const role = ref(null)
+  const error = ref(null)
+
+  const login = async (credentials) => {
+    try {
+      const res = await api.post('/auth/login', credentials)
+      localStorage.setItem('token', res.data.token)
+      await fetchUser()
+      router.push('/books')
+    } catch (err) {
+      error.value = 'Invalid email or password.'
     }
   }
-});
+
+  const logout = async () => {
+    await api.post('/auth/logout')
+
+    localStorage.removeItem('token')
+    user.value = null
+    router.push('/login')
+  }
+
+  const fetchUser = async () => {
+    try {
+      const res = await api.get('/user/profile')
+      user.value = res.data
+      role.value = res.data.role
+    } catch {
+      user.value = null
+      router.push('/login')
+    }
+  }
+
+  const hasRole = (requiredRoles) => {
+    if (!requiredRoles?.length) {
+      return true
+    }
+
+    return requiredRoles.includes(role.value)
+  }
+
+  return { isAuthenticated, error, login, logout, fetchUser, hasRole }
+})
