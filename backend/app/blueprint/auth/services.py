@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import current_app
+from flask import current_app, request
 from sqlalchemy import select
 from authlib.jose import jwt
 from ...extensions import db
@@ -8,7 +8,6 @@ from ...models.home_address import Home_address
 from ...models.role import Role
 from .schemas import RoleSchema
 from apiflask import HTTPError
-from ...models.users import UserRole
 
 
 class AuthService:
@@ -132,3 +131,26 @@ class AuthService:
         db.session.commit()
 
         return "", 204
+
+    @staticmethod
+    def get_current_user():
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            return None
+
+        try:
+            token = auth_header.split()[1]
+
+            claims = jwt.decode(
+                token,
+                current_app.config["SECRET_KEY"]
+            )
+            claims.validate()
+
+            user_id = claims["user_id"]
+            user = User.query.get(user_id)
+
+            return user
+
+        except Exception as e:
+            return None
