@@ -7,6 +7,8 @@ from ...models.users import User
 from ...models.home_address import Home_address
 from ...models.role import Role
 from .schemas import RoleSchema
+from apiflask import HTTPError
+from ...models.users import UserRole
 
 
 class AuthService:
@@ -76,3 +78,57 @@ class AuthService:
         except Exception as e:
             db.session.rollback()
             return False, f"Registration failed: {e}"
+
+    @staticmethod
+    def set_role(json_data):
+        user = User.query.get(json_data["user_id"])
+        if not user:
+            raise HTTPError(404, "User not found.")
+
+        role = Role.query.get(json_data["role_id"])
+        if not role:
+            raise HTTPError(404, "Role not found.")
+
+        user.roles.append(role)
+        db.session.commit()
+
+        role_names = [role.role_name for role in user.roles]
+
+        return {
+            "user_id": user.user_id,
+            "roles": role_names
+        }
+
+    @staticmethod
+    def get_roles_by_user_id(user_id):
+        user = User.query.get(user_id)
+        if not user:
+            raise HTTPError(404, "User not found.")
+        return user.roles
+
+    @staticmethod
+    def get_roles():
+        roles = Role.query.all()
+        if not roles:
+            raise HTTPError(404, "Roles table is empty.")
+        return roles
+
+    @staticmethod
+    def delete_role(json_data):
+        user = User.query.get(json_data["user_id"])
+        if not user:
+            raise HTTPError(404, "User not found.")
+
+        role = Role.query.get(json_data["role_id"])
+        if not role:
+            raise HTTPError(404, "Role does not exist.")
+
+        role_ids = [role.role_id for role in user.roles]
+        if json_data["role_id"] not in role_ids:
+            raise HTTPError(404, "User is not associated with the specified role.")
+
+        role_obj = Role.query.get(json_data["role_id"])
+        user.roles.remove(role_obj)
+        db.session.commit()
+
+        return "", 204

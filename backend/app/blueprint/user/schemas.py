@@ -30,3 +30,20 @@ class ProfileUpdateResponseSchema(Schema):
     email = fields.String()
     phone_number = fields.String()
     address = fields.Nested(AddressSchema)
+
+class GetRoleResponseSchema(Schema):
+    role_id = fields.Integer()
+    role_name = fields.String()
+
+class RoleRequestSchema(Schema):
+    user_id = fields.Integer()
+    role_id = fields.Integer()
+    role_name = fields.String()
+
+class SetRoleResponseSchema(Schema):
+    user_id = fields.Integer()
+    roles = fields.List(fields.String)
+
+class DeleteRoleRequestSchema(Schema):
+    user_id = fields.Integer()
+    role_id = fields.Integer()
