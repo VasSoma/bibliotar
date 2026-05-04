@@ -31,7 +31,7 @@ const profile = ref(null);
 
 const fetchProfile = async () => {
   try {
-    const res = await apiClient.get('/api/user/profile');
+    const res = await apiClient.get('/user/profile');
     profile.value = res.data;
   } catch (error) {
     console.error('Profil lekérdezési hiba', error);
@@ -40,7 +40,7 @@ const fetchProfile = async () => {
 
 const updateProfile = async () => {
   try {
-    await apiClient.patch('/api/user/profile', {
+    await apiClient.patch('/user/profile', {
       name: profile.value.name,
       email: profile.value.email,
       phone_number: profile.value.phone_number,

@@ -48,7 +48,7 @@ const fetchLoans = async () => {
   if (!authStore.userId) return;
   loading.value = true;
   try {
-    const res = await apiClient.get(`/api/loans/history/${authStore.userId}`);
+    const res = await apiClient.get(`/loans/history/${authStore.userId}`);
     loans.value = res.data;
   } catch (error) {
     console.error('Kölcsönzések betöltési hiba:', error);
@@ -59,7 +59,7 @@ const fetchLoans = async () => {
 
 const extendLoan = async (loanId) => {
   try {
-    await apiClient.post(`/api/loans/history/${loanId}/extend`);
+    await apiClient.post(`/loans/history/${loanId}/extend`);
     alert('Sikeres hosszabbítás!');
     fetchLoans();
   } catch (error) {
@@ -76,7 +76,7 @@ const rentBook = async (bookId) => {
   }
 
   try {
-    await apiClient.post('/api/loans/history/create', {
+    await apiClient.post('/loans/history/create', {
       book_id: Number(bookId),
       user_id: Number(authStore.userId)
     });

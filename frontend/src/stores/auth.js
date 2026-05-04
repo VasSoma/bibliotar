@@ -13,7 +13,7 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async login(email, password) {
       try {
-        const response = await apiClient.post('/api/auth/login', { email, password });
+        const response = await apiClient.post('/auth/login', { email, password });
         const token = response.data.token;
         
         let rawId = response.data.user_id || response.data.userId;
@@ -51,7 +51,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async logout() {
       try {
-        if (this.token) await apiClient.post('/api/auth/logout');
+        if (this.token) await apiClient.post('/auth/logout');
       } finally {
         this.token = null;
         this.userId = null;

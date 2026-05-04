@@ -31,7 +31,7 @@ const loading = ref(false);
 const fetchBooks = async () => {
   loading.value = true;
   try {
-    const res = await apiClient.get('/api/books/');
+    const res = await apiClient.get('/books/');
     books.value = res.data;
   } catch (error) {
     console.error('Hiba a könyvek betöltésekor:', error);
@@ -51,7 +51,7 @@ const rentBook = async (bookId) => {
   }
 
   try {
-    await apiClient.post('/api/loans/history/create', {
+    await apiClient.post('/loans/history/create', {
       book_id: Number(bookId),
       user_id: Number(authStore.userId)
     });
