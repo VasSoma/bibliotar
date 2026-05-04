@@ -9,7 +9,7 @@ class BookRequestSchema(Schema):
     author = fields.String()
 
 class BookResponseSchema(Schema):
-    id = fields.Integer()
+    book_id = fields.Integer()
     title = fields.String()
     isbn = fields.String()
     quantity = fields.Integer()

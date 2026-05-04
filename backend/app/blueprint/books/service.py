@@ -21,16 +21,21 @@ class BookService:
 
     @staticmethod
     def create_book(json_data):
-        book = Book(
-            title=json_data["title"],
-            isbn=json_data["isbn"],
-            quantity=json_data["quantity"],
-            is_available=json_data.get("is_available", True),
-            author=json_data["author"]
-        )
+        book = Book.query.where(json_data["isbn"] == Book.isbn).first()
 
-        db.session.add(book)
-        db.session.commit()
+        if not book:
+            new_book = Book(
+                title=json_data["title"],
+                isbn=json_data["isbn"],
+                quantity=json_data["quantity"],
+                is_available=json_data.get("is_available", True),
+                author=json_data["author"]
+            )
+
+            db.session.add(new_book)
+            db.session.commit()
+        else:
+            raise HTTPError(409, "Book already exists with same ISBN.")
 
         return book
 
