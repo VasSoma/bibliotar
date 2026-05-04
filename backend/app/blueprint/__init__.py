@@ -3,7 +3,6 @@ from datetime import datetime
 from flask import current_app
 from apiflask import APIBlueprint, HTTPError
 from authlib.jose import jwt
-from flask import render_template
 from ..extensions import auth as _auth
 
 @_auth.verify_token

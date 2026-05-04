@@ -1,5 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+from apiflask import HTTPError
 from sqlalchemy import select
+
+from ...models.users import User
+from ..auth.services import AuthService
+from ..books.service import BookService
 from ...extensions import db
 from ...models.loan import Loan
 from ...models.fines import Fines
@@ -135,3 +141,44 @@ class LoansService:
         except Exception as e:
             db.session.rollback()
             return False, f"Failed to mark fine as paid: {e}"
+
+    @staticmethod
+    def create_loan(json_data):
+        book = BookService.get_book_by_id(json_data["book_id"])
+        current_user = AuthService.get_current_user()
+        current_user_roles = AuthService.get_roles_by_user_id(current_user.user_id)
+        role_names = [role.role_name for role in current_user_roles]
+
+        print(role_names)
+        print(current_user.name)
+        if ("librarian" not in role_names and "admin" not in role_names) and json_data["user_id"] != current_user.user_id:
+            raise HTTPError(403, "Users can only create loans for themselves.")
+        else:
+            user = User.query.get(json_data["user_id"])
+            if not user:
+                raise HTTPError(404, "User not found.")
+
+        if not book:
+            raise HTTPError(404, "Book does not exist.")
+        elif not book.is_available:
+            raise HTTPError(404, "Book is not available.")
+        else:
+            now = datetime.now(timezone.utc)
+
+            loan = Loan(
+                user_id = json_data["user_id"],
+                book_id = json_data["book_id"],
+                start_date = now,
+                due_date = now + timedelta(days=7),
+                return_date = None,
+                extension_count = 0
+            )
+
+            if book.quantity == 1:
+                book.is_available = False
+            book.quantity -= 1
+
+            db.session.add(loan)
+            db.session.commit()
+
+        return loan

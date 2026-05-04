@@ -4,7 +4,6 @@ from sqlalchemy.orm import mapped_column
 from ..extensions import db
 from typing import List
 
-
 class Role(db.Model):
     __tablename__ = "roles"
 

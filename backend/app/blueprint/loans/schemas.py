@@ -6,6 +6,9 @@ class BookInLoanSchema(Schema):
     title = fields.String()
     author = fields.String()
 
+class LoanRequestSchema(Schema):
+    user_id = fields.Integer()
+    book_id = fields.Integer()
 
 class LoanResponseSchema(Schema):
     loan_id = fields.Integer()
