@@ -5,6 +5,7 @@ A rendszerfejlesztés haladó módszerei kurzus keretein belül megvalósított 
 **0. pip install -r requirements.txt**
 **1. NPM telepítése - https://docs.npmjs.com/cli/v10/configuring-npm/install (Node.js installer - Windows)**
 **2. run.cmd futtatása**
+**3. http://localhost:5173/**
 
 ## Hozzáférés beállítása terminálban
 
