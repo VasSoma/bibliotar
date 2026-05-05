@@ -10,6 +10,7 @@ import BookingListPage from '@/pages/BookingList.page.vue';
 import ProfilePage from '../pages/Profile.page.vue';
 import BookDetailsPage from '@/pages/BookDetails.page.vue';
 import EditBookPage from '@/pages/EditBook.page.vue';
+import BookingDetailsPage from '@/pages/BookingDetails.page.vue';
 
 // Itt definiáljuk a routes tömböt - ez hiányzott a hibaüzeneted szerint
 const routes = [
@@ -46,6 +47,10 @@ const routes = [
   { 
     path: '/bookings', 
     component: BookingListPage 
+  },
+  { 
+    path: '/bookings/:id', 
+    component: BookingDetailsPage 
   },
   { 
     path: '/profile', 
