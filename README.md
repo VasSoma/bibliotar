@@ -1,6 +1,10 @@
 # BiblioTár
 A rendszerfejlesztés haladó módszerei kurzus keretein belül megvalósított projekt. Téma: BilbioTár.
 
+## Futtatás
+**1. NPM telepítése - https://docs.npmjs.com/cli/v10/configuring-npm/install (Node.js installer - windows)
+**2. run.cmd futtatása
+
 ## Hozzáférés beállítása terminálban
 
 ### Windows
