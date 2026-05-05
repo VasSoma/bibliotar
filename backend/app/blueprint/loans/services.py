@@ -73,6 +73,9 @@ class LoansService:
             if not loan:
                 return False, "Loan not found"
 
+            if loan.return_date:
+                return False, "Cannot extend a returned loan"
+
             if "librarian" in role_names:
                 extension_days = LIBRARIAN_EXTENSION_DAYS
             elif "user" in role_names:
