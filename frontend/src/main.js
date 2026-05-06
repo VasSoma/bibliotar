@@ -17,4 +17,4 @@ const auth = useAuthStore()
 await auth.fetchUser()
 
 app.use(router)
-app.mount('#app'
+app.mount('#app')

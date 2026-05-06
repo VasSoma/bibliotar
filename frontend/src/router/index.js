@@ -10,7 +10,7 @@ import BookingListPage from '@/pages/BookingList.page.vue'
 import ProfilePage from '../pages/Profile.page.vue'
 import BookDetailsPage from '@/pages/BookDetails.page.vue'
 import BookingDetailsPage from '@/pages/BookingDetails.page.vue'
-import NotFoundPagePage from '@/pages/NotFoundPage.page.vue'
+import NotFoundPage from '@/pages/NotFound.page.vue'
 import EditBookPage from '@/pages/EditBook.page.vue'
 import { ROLES } from '@/consts/role.const'
 import AccessDeniedPage from '@/pages/AccessDenied.page.vue'
@@ -29,7 +29,7 @@ const publicRoutes = [
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
-    component: NotFoundPagePage,
+    component: NotFoundPage,
   },
 ]
 
