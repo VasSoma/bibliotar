@@ -2,25 +2,28 @@ from .. import role_required
 from ..loans import bp
 from apiflask import HTTPError
 from ...extensions import auth
-from .schemas import LoanResponseSchema, ExtendResponseSchema, ReturnResponseSchema, FinePaidResponseSchema, \
+from .schemas import LoanResponseSchema, LoanQuerySchema, ExtendResponseSchema, ReturnResponseSchema, FinePaidResponseSchema, \
     LoanRequestSchema
 from .services import LoansService
 
-
-@bp.get("/history/<int:user_id>")
+@bp.get("")
 @bp.auth_required(auth)
+@bp.input(LoanQuerySchema, arg_name="query", location="query")
 @bp.output(LoanResponseSchema(many=True))
-def get_history(user_id):
+def get_loans(query):
     requester_id = auth.current_user.get("user_id")
     requester_roles = auth.current_user.get("roles", [])
+    return LoansService.get_loans(requester_id, requester_roles, query["search"])
 
-    success, response = LoansService.get_history(requester_id, requester_roles, user_id)
-    if success:
-        return response, 200
-    raise HTTPError(403, response)
+@bp.get("/<int:loan_id>")
+@bp.auth_required(auth)
+@bp.output(LoanResponseSchema)
+def get_loan(loan_id):
+    requester_id = auth.current_user.get("user_id")
+    requester_roles = auth.current_user.get("roles", [])
+    return LoansService.get_loan(requester_id, requester_roles, loan_id)
 
-
-@bp.post("/history/<int:loan_id>/extend")
+@bp.post("/<int:loan_id>/extend")
 @bp.auth_required(auth)
 @bp.output(ExtendResponseSchema)
 def extend_loan(loan_id):
@@ -33,7 +36,7 @@ def extend_loan(loan_id):
     raise HTTPError(400, response)
 
 
-@bp.post("/history/<int:loan_id>/returned")
+@bp.post("/<int:loan_id>/returned")
 @bp.auth_required(auth)
 @bp.output(ReturnResponseSchema)
 def return_loan(loan_id):
@@ -45,7 +48,7 @@ def return_loan(loan_id):
     raise HTTPError(400, response)
 
 
-@bp.post("/history/<int:loan_id>/fine_paid")
+@bp.post("/<int:loan_id>/fine_paid")
 @bp.auth_required(auth)
 @bp.output(FinePaidResponseSchema)
 def fine_paid(loan_id):
@@ -56,7 +59,7 @@ def fine_paid(loan_id):
         return response, 200
     raise HTTPError(400, response)
 
-@bp.post("/history/create")
+@bp.post("")
 @bp.input(LoanRequestSchema)
 @bp.output(LoanResponseSchema)
 @bp.auth_required(auth)

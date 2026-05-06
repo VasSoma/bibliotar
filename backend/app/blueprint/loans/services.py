@@ -1,13 +1,14 @@
 from datetime import datetime, timedelta, timezone
 
 from apiflask import HTTPError
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
 from ...models.users import User
 from ..auth.services import AuthService
 from ..books.service import BookService
 from ...extensions import db
 from ...models.loan import Loan
+from ...models.book import Book
 from ...models.fines import Fines
 
 DAILY_FINE_AMOUNT = 1
@@ -18,48 +19,96 @@ LIBRARIAN_EXTENSION_DAYS = 7
 
 
 class LoansService:
+
     @staticmethod
-    def get_history(requester_id, requester_roles, user_id):
-        try:
-            role_names = [r["role_name"] for r in requester_roles]
+    def get_loans(requester_id, requester_roles, search):
+        role_names = [r["role_name"] for r in requester_roles]
 
-            if "librarian" in role_names:
-                loans = db.session.execute(select(Loan)).scalars().all()
-            elif "user" in role_names:
-                if requester_id != user_id:
-                    return False, "Access denied"
-                loans = db.session.execute(
-                    select(Loan).filter_by(user_id=user_id)
-                ).scalars().all()
+        query = select(Loan).join(Loan.book).join(Loan.user)
+
+        if "librarian" in role_names:
+            if search:
+                pattern = f"%{search}%"
+                query = query.where(
+                    or_(
+                        Book.title.ilike(pattern),
+                        Book.author.ilike(pattern),
+                        User.name.ilike(pattern),
+                    )
+                )
+        elif "user" in role_names:
+            query = query.where(Loan.user_id == requester_id)
+            if search:
+                pattern = f"%{search}%"
+                query = query.where(
+                    or_(
+                        Book.title.ilike(pattern),
+                        Book.author.ilike(pattern),
+                    )
+                )
+
+        loans = db.session.execute(query).scalars().all()
+        result = []
+        for loan in loans:
+            if loan.return_date:
+                overdue_fine = None
             else:
-                return False, "Access denied"
+                overdue_days = max(0, (datetime.now() - loan.due_date).days)
+                overdue_fine = (
+                    overdue_days * DAILY_FINE_AMOUNT if overdue_days > 0 else None
+                )
 
-            result = []
-            for loan in loans:
-                if loan.return_date:
-                    overdue_fine = None
-                else:
-                    overdue_days = max(0, (datetime.now() - loan.due_date).days)
-                    overdue_fine = overdue_days * DAILY_FINE_AMOUNT if overdue_days > 0 else None
-
-                result.append({
+            result.append(
+                {
                     "loan_id": loan.loan_id,
                     "user_id": loan.user_id,
                     "book": {
                         "book_id": loan.book.book_id,
                         "title": loan.book.title,
-                        "author": loan.book.author
+                        "author": loan.book.author,
                     },
                     "start_date": loan.start_date,
                     "due_date": loan.due_date,
                     "return_date": loan.return_date,
                     "extension_count": loan.extension_count,
-                    "overdue_fine": overdue_fine
-                })
+                    "overdue_fine": overdue_fine,
+                }
+            )
+        return result
 
-            return True, result
-        except Exception as e:
-            return False, f"Failed to get history: {e}"
+    @staticmethod
+    def get_loan(requester_id, requester_roles, loan_id):
+        role_names = [r["role_name"] for r in requester_roles]
+
+        query = select(Loan).where(Loan.loan_id == loan_id)
+
+        if "user" in role_names:
+            query = query.where(Loan.user_id == requester_id)
+
+        loan = db.session.execute(query).scalar_one_or_none()
+
+        if not loan:
+            return False, "Loan not found"
+
+        end_date = loan.return_date or datetime.now()
+        overdue_days = max(0, (end_date - loan.due_date).days)
+        overdue_fine = overdue_days * DAILY_FINE_AMOUNT
+
+        return {
+            "loan_id": loan.loan_id,
+            "user_id": loan.user_id,
+            "book": {
+                "book_id": loan.book.book_id,
+                "title": loan.book.title,
+                "author": loan.book.author,
+            },
+            "start_date": loan.start_date,
+            "due_date": loan.due_date,
+            "return_date": loan.return_date,
+            "extension_count": loan.extension_count,
+            "overdue_fine": overdue_fine,
+        }
+
 
     @staticmethod
     def extend_loan(requester_id, requester_roles, loan_id):
@@ -201,9 +250,11 @@ class LoansService:
                 extension_count = 0
             )
 
-            if book.quantity == 1:
-                book.is_available = False
-            book.quantity -= 1
+            if book.quantity > 0:
+                book.quantity -= 1
+
+            if book.quantity == 0:
+                book.is_available = False   
 
             db.session.add(loan)
             db.session.commit()

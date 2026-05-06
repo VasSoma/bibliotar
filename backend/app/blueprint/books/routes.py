@@ -30,8 +30,8 @@ def create_book(json_data):
 @bp.output(BookResponseSchema)
 @bp.auth_required(auth)
 @role_required(["admin"])
-def update_book(json_data):
-    return BookService.update_book(json_data)
+def update_book(json_data, book_id):
+    return BookService.update_book(json_data, book_id)
 
 @bp.delete('/<int:book_id>')
 @bp.auth_required(auth)

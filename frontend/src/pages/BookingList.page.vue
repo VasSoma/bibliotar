@@ -38,7 +38,7 @@ const loading = ref(false);
 const fetchLoans = async () => {
   loading.value = true;
   try {
-    const res = await apiClient.get(`/loans}`);
+    const res = await apiClient.get(`/loans`);
     loans.value = res.data;
   } catch (error) {
     console.error('Kölcsönzések betöltési hiba:', error);

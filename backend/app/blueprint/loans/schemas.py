@@ -1,6 +1,8 @@
 from marshmallow import Schema, fields
 
-
+class LoanQuerySchema(Schema):
+    search = fields.String(load_default=None)
+    
 class BookInLoanSchema(Schema):
     book_id = fields.Integer()
     title = fields.String()
@@ -37,3 +39,4 @@ class FinePaidResponseSchema(Schema):
     loan_id = fields.Integer()
     amount = fields.Integer()
     is_paid = fields.Boolean()
+
