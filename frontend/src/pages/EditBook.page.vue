@@ -35,12 +35,15 @@ async function onSubmit() {
     }
 
     if (isEdit) {
-        await apiClient.patch(`/books/update`, { ...payload, id: bookId })
+        await apiClient.patch(`/books/${bookId}`, payload)
+        alert('A konyv modositasa sikeres volt.')
     }
     else {
         await apiClient.post(`/books/new`, payload)
-    }
+        alert('A konyv letrehozasa sikeres volt.')
+    }   
 }
+
 
 </script>
 

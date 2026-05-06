@@ -45,7 +45,7 @@
 
       <button type="submit">Regisztrálok</button>
     </form>
-    <button @click="$router.push('/login')">Már van fiókom, belépek</button>
+    <router-link to="/login">Már van fiókom, belépek</router-link>
   </div>
 </template>
 
