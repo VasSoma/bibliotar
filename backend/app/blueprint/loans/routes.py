@@ -70,4 +70,7 @@ def fine_paid(loan_id):
 @bp.output(LoanResponseSchema)
 @bp.auth_required(auth)
 def create_loan(json_data):
-    return LoansService.create_loan(json_data)
+    requester_id = auth.current_user.get("user_id")
+    requester_roles = auth.current_user.get("roles", [])
+    return LoansService.create_loan(json_data, requester_id, requester_roles)
+
