@@ -38,18 +38,18 @@ async function fetchBook() {
 
 async function rentBook() {
     console.log('--- Kölcsönzés indítása ---');
-    console.log('Mentett UserID:', authStore.userId, 'Típusa:', typeof authStore.userId);
+    console.log('Mentett UserID:', authStore.user?.user_id, 'Típusa:', typeof authStore.user?.user_id);
     console.log('Könyv ID:', book.value.book_id);
 
-    if (!authStore.userId || isNaN(authStore.userId)) {
+    if (!authStore.user?.user_id || isNaN(authStore.user?.user_id)) {
         alert("Hiba: Érvénytelen felhasználói azonosító! Kérlek, jelentkezz be újra.");
         return;
     }
 
     try {
-        await apiClient.post('/loans/history/create', {
+        await apiClient.post('/loans', {
             book_id: Number(bookId),
-            user_id: Number(authStore.userId)
+            user_id: Number(authStore.user?.user_id)
         });
         alert('Sikeres kölcsönzés!');
         fetchBook();
@@ -74,9 +74,9 @@ async function rentBook() {
         <p><strong>Mennyiség:</strong> {{ book.quantity }}</p>
         <p><strong>Elérhető:</strong> {{ book.is_available ? 'Igen' : 'Nem' }}</p>
         <div class="button-container">
-            <button v-if="authStore.user.role === 'admin' " @click="onHandleEdit">Szerkesztés</button>
-            <button v-if="authStore.user.role === 'admin' " @click="onHandleDelete">Torles</button>
-            <button v-if="authStore.user.role === 'user' " @click="rentBook(book.book_id)" :disabled="!book.is_available || !authStore.isAuthenticated">
+            <button v-if="authStore.user?.role === 'admin' " @click="onHandleEdit">Szerkesztés</button>
+            <button v-if="authStore.user?.role === 'admin' " @click="onHandleDelete">Torles</button>
+            <button v-if="authStore.user?.role === 'user' " @click="rentBook(book.book_id)" :disabled="!book.is_available || !authStore.isAuthenticated">
                 Kölcsönzés
             </button>
         </div>
