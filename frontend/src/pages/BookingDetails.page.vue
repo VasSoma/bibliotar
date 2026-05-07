@@ -2,17 +2,19 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { apiClient } from '@/api-client/api.client'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const loanId = route.params.id
 const loan = ref(null)
+const authStore = useAuthStore()
 
 onMounted(async () => {
- fetchLoan()
+  fetchLoan()
 })
 
-async function fetchLoan(){
- const { data } = await apiClient.get(`/loans/${loanId}`)
+async function fetchLoan() {
+  const { data } = await apiClient.get(`/loans/${loanId}`)
   loan.value = data
 }
 
@@ -57,16 +59,21 @@ async function finePaid() {
     <p><strong>Kezdés dátuma:</strong> {{ loan.start_date }}</p>
     <p><strong>Határidő:</strong> {{ loan.due_date }}</p>
     <p><strong>Hosszabbítások száma:</strong> {{ loan.extension_count }}</p>
-    <div class="button-container">
-      <button @click="extendLoan()" :disabled="loan.extension_count >= 2">
+    <p v-if="loan.return_date"><strong>Visszahozva:</strong> {{ loan.return_date }}</p>
+    <p><strong>Hosszabbítások száma:</strong> {{ loan.extension_count }} / 2</p>
+    <strong>
+      <p v-if="loan.overdue_fine" class="fine">Büntetés: {{ loan.overdue_fine }} Ft</p>
+    </strong>
+    <div v-if="authStore.user.role === 'librarian'" class="button-container">
+      <button @click="extendLoan()" :disabled="loan.return_date || loan.extension_count >= 2">
         Hosszabbítás
       </button>
 
-      <button @click="returnBook()" style="margin-left: 10px;">
+      <button @click="returnBook()" :disabled="loan.return_date" style="margin-left: 10px;">
         Visszahozatal
       </button>
 
-      <button @click="finePaid()" style="margin-left: 10px;">
+      <button @click="finePaid()" :disabled="!loan.overdue_fine" style="margin-left: 10px;">
         Büntetés fizetve
       </button>
     </div>
@@ -80,4 +87,9 @@ async function finePaid() {
   display: flex;
   gap: 4px;
 }
+
+.fine {
+  color: red;
+}
+
 </style>

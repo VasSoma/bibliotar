@@ -27,22 +27,19 @@ class LoansService:
         query = select(Loan).join(Loan.book).join(Loan.user)
 
         if role["role_name"] == "user":
-            query.where(Loan.user_id == requester_id)
+            query = query.where(Loan.user_id == requester_id)
 
         if search:
             pattern = f"%{search}%"
-            query.where(
-                or_(
-                    Book.title.ilike(pattern),
-                    Book.author.ilike(pattern),
-                )
-            )
+            conditions = [
+                Book.title.ilike(pattern),
+                Book.author.ilike(pattern),
+            ]
 
             if role["role_name"] == "librarian" or role["role_name"] == "admin":
-                query = query.where(
-                    User.name.ilike(pattern),
-                )
+                conditions.append(User.name.ilike(pattern))
 
+            query = query.where(or_(*conditions))
 
         loans = db.session.execute(query).scalars().all()
         result = []
@@ -193,7 +190,7 @@ class LoansService:
     def fine_paid(requester_roles, loan_id):
         try:
             role = list(reversed(requester_roles))[0]
-            if role["role_name"] == "librarian":
+            if role["role_name"] != "librarian":
                 return False, "Only librarians can mark fines as paid"
 
             fine = db.session.execute(

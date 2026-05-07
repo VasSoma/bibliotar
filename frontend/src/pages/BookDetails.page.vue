@@ -74,15 +74,15 @@ async function rentBook() {
         <p><strong>Mennyiség:</strong> {{ book.quantity }}</p>
         <p><strong>Elérhető:</strong> {{ book.is_available ? 'Igen' : 'Nem' }}</p>
         <div class="button-container">
-            <button @click="onHandleEdit">Szerkesztés</button>
-            <button @click="onHandleDelete">Torles</button>
-            <button @click="rentBook(book.book_id)" :disabled="!book.is_available || !authStore.isAuthenticated">
+            <button v-if="authStore.user.role === 'admin' " @click="onHandleEdit">Szerkesztés</button>
+            <button v-if="authStore.user.role === 'admin' " @click="onHandleDelete">Torles</button>
+            <button v-if="authStore.user.role === 'user' " @click="rentBook(book.book_id)" :disabled="!book.is_available || !authStore.isAuthenticated">
                 Kölcsönzés
             </button>
         </div>
     </div>
     <p v-else>Betöltés...</p>
-</template>
+</template>0
 
 <style>
 .button-container {
