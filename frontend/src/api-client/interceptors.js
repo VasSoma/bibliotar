@@ -1,26 +1,24 @@
-import { apiClient } from './api.client';
-import { useAuthStore } from '../stores/auth';
+import { apiClient } from '@/api-client/api.client'
+import router from '@/router'
 
-apiClient.interceptors.request.use(
-  (config) => {
-    const authStore = useAuthStore();
-    if (authStore.token) {
-      config.headers.Authorization = `Bearer ${authStore.token}`;
+export const setupApiClient = () => {
+  apiClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+    return config
+  })
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      const authStore = useAuthStore();
-      authStore.logout();
-    }
-    return Promise.reject(error);
-  }
-);
+  apiClient.interceptors.response.use(
+    (res) => res,
+    (error) => {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token')
+        router.push('/login')
+      }
+
+      return Promise.reject(error)
+    },
+  )
+}

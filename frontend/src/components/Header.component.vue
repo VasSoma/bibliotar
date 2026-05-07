@@ -1,16 +1,12 @@
 <template>
   <header>
-    <nav>
+    <nav class="nav">
+      <template v-if="authStore.isAuthenticated">
       <router-link to="/">Főoldal</router-link>
       <router-link to="/books">Könyvek</router-link>
-      
-      <template v-if="authStore.isAuthenticated">
+      <router-link to="/bookings">Kölcsönzések</router-link>
         <router-link to="/profile">Saját profil</router-link>
         <button @click="handleLogout">Kijelentkezés</button>
-      </template>
-      
-      <template v-else>
-        <router-link to="/login">Bejelentkezés / Regisztráció</router-link>
       </template>
     </nav>
   </header>
@@ -28,3 +24,7 @@ const handleLogout = async () => {
   router.push('/login');
 };
 </script>
+
+<style>
+.nav {display: flex; gap: 8px;}
+</style>

@@ -19,7 +19,7 @@ def get_book_by_id(book_id):
 @bp.input(BookRequestSchema)
 @bp.output(BookResponseSchema)
 @bp.auth_required(auth)
-@role_required(["librarian"])
+# @role_required(["librarian"])
 def create_book(json_data):
     return BookService.create_book(json_data)
 

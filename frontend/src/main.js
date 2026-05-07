@@ -1,13 +1,20 @@
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-import App from './App.vue';
-import router from './router';
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+import router from './router'
+import { useAuthStore } from '@/stores/auth'
 
-import './api-client/interceptors'; 
+import './api-client/interceptors'
+import { setupApiClient } from './api-client/interceptors'
 
-const app = createApp(App);
+const app = createApp(App)
+app.use(createPinia())
 
-app.use(createPinia());
-app.use(router);
+setupApiClient()
 
-app.mount('#app');
+// try to fetch profile with token read from local storage
+const auth = useAuthStore()
+await auth.fetchUser()
+
+app.use(router)
+app.mount('#app')

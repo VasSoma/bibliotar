@@ -26,6 +26,7 @@
       </div>
       <button type="submit">Belépés</button>
     </form>
+    <p>Még nincs fiókod? <router-link to="/register">Regisztrálj itt</router-link></p>
   </div>
 </template>
 
@@ -42,10 +43,11 @@ const password = ref('');
 
 const handleSubmit = async () => {
   try {
-    await authStore.login(email.value, password.value);
+    await authStore.login({ email: email.value, password: password.value });
     router.push('/');
   } catch (error) {
     alert('Hiba a bejelentkezés során: ' + (error.response?.data?.message || 'Hibás adatok'));
   }
 };
 </script>
+
