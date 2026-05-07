@@ -14,8 +14,6 @@ class BookService:
                 db.or_(Book.title.ilike(like), Book.author.ilike(like))
             )
         books = query.all()
-        if not books:
-            raise HTTPError(message="No books available", status_code=404)
         return books
 
     @staticmethod

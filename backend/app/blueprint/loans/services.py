@@ -22,30 +22,27 @@ class LoansService:
 
     @staticmethod
     def get_loans(requester_id, requester_roles, search):
-        role_names = [r["role_name"] for r in requester_roles]
+        role = list(reversed(requester_roles))[0]
 
         query = select(Loan).join(Loan.book).join(Loan.user)
 
-        if "librarian" in role_names:
-            if search:
-                pattern = f"%{search}%"
-                query = query.where(
-                    or_(
-                        Book.title.ilike(pattern),
-                        Book.author.ilike(pattern),
-                        User.name.ilike(pattern),
-                    )
+        if role["role_name"] == "user":
+            query.where(Loan.user_id == requester_id)
+
+        if search:
+            pattern = f"%{search}%"
+            query.where(
+                or_(
+                    Book.title.ilike(pattern),
+                    Book.author.ilike(pattern),
                 )
-        elif "user" in role_names:
-            query = query.where(Loan.user_id == requester_id)
-            if search:
-                pattern = f"%{search}%"
+            )
+
+            if role["role_name"] == "librarian" or role["role_name"] == "admin":
                 query = query.where(
-                    or_(
-                        Book.title.ilike(pattern),
-                        Book.author.ilike(pattern),
-                    )
+                    User.name.ilike(pattern),
                 )
+
 
         loans = db.session.execute(query).scalars().all()
         result = []
@@ -74,15 +71,15 @@ class LoansService:
                     "overdue_fine": overdue_fine,
                 }
             )
-        return result
+        return True, result
 
     @staticmethod
     def get_loan(requester_id, requester_roles, loan_id):
-        role_names = [r["role_name"] for r in requester_roles]
+        role = list(reversed(requester_roles))[0]
 
         query = select(Loan).where(Loan.loan_id == loan_id)
 
-        if "user" in role_names:
+        if role["role_name"] == "user":
             query = query.where(Loan.user_id == requester_id)
 
         loan = db.session.execute(query).scalar_one_or_none()
@@ -94,7 +91,7 @@ class LoansService:
         overdue_days = max(0, (end_date - loan.due_date).days)
         overdue_fine = overdue_days * DAILY_FINE_AMOUNT
 
-        return {
+        return True,  {
             "loan_id": loan.loan_id,
             "user_id": loan.user_id,
             "book": {
@@ -113,7 +110,7 @@ class LoansService:
     @staticmethod
     def extend_loan(requester_id, requester_roles, loan_id):
         try:
-            role_names = [r["role_name"] for r in requester_roles]
+            role = list(reversed(requester_roles))[0]
 
             loan = db.session.execute(
                 select(Loan).filter_by(loan_id=loan_id)
@@ -122,9 +119,9 @@ class LoansService:
             if not loan:
                 return False, "Loan not found"
 
-            if "librarian" in role_names:
+            if role["role_name"] == "librarian":
                 extension_days = LIBRARIAN_EXTENSION_DAYS
-            elif "user" in role_names:
+            elif role["role_name"] == "user":
                 if loan.user_id != requester_id:
                     return False, "Access denied"
                 if loan.extension_count >= MAX_USER_EXTENSIONS:
@@ -149,8 +146,9 @@ class LoansService:
     @staticmethod
     def return_loan(requester_roles, loan_id):
         try:
-            role_names = [r["role_name"] for r in requester_roles]
-            if "librarian" not in role_names:
+            role = list(reversed(requester_roles))[0]
+
+            if role["role_name"] == "librarian":
                 return False, "Only librarians can process returns"
 
             loan = db.session.execute(
@@ -194,8 +192,8 @@ class LoansService:
     @staticmethod
     def fine_paid(requester_roles, loan_id):
         try:
-            role_names = [r["role_name"] for r in requester_roles]
-            if "librarian" not in role_names:
+            role = list(reversed(requester_roles))[0]
+            if role["role_name"] == "librarian":
                 return False, "Only librarians can mark fines as paid"
 
             fine = db.session.execute(
@@ -223,11 +221,9 @@ class LoansService:
         book = BookService.get_book_by_id(json_data["book_id"])
         current_user = AuthService.get_current_user()
         current_user_roles = AuthService.get_roles_by_user_id(current_user.user_id)
-        role_names = [role.role_name for role in current_user_roles]
+        role = list(reversed(current_user_roles))[0]
 
-        print(role_names)
-        print(current_user.name)
-        if ("librarian" not in role_names and "admin" not in role_names) and json_data["user_id"] != current_user.user_id:
+        if role["role_name"] == "user" and json_data["user_id"] != current_user.user_id:
             raise HTTPError(403, "Users can only create loans for themselves.")
         else:
             user = User.query.get(json_data["user_id"])

@@ -13,7 +13,10 @@ from .services import LoansService
 def get_loans(query):
     requester_id = auth.current_user.get("user_id")
     requester_roles = auth.current_user.get("roles", [])
-    return LoansService.get_loans(requester_id, requester_roles, query["search"])
+    success, response = LoansService.get_loans(requester_id, requester_roles, query["search"])
+    if success:
+        return response, 200
+    raise HTTPError(400, response)
 
 @bp.get("/<int:loan_id>")
 @bp.auth_required(auth)
@@ -21,7 +24,10 @@ def get_loans(query):
 def get_loan(loan_id):
     requester_id = auth.current_user.get("user_id")
     requester_roles = auth.current_user.get("roles", [])
-    return LoansService.get_loan(requester_id, requester_roles, loan_id)
+    success, response = LoansService.get_loan(requester_id, requester_roles, loan_id)
+    if success:
+        return response, 200
+    raise HTTPError(400, response)
 
 @bp.post("/<int:loan_id>/extend")
 @bp.auth_required(auth)
