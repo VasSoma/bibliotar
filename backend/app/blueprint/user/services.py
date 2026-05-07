@@ -17,7 +17,7 @@ class UserService:
             addr = user.addresses[0] if user.addresses else None
             return True, {
                 "user_id": user.user_id,
-                "role": user.roles[0].role_name if user.roles else None,
+                "role": (list(reversed(user.roles))[0].role_name if user.roles else None),
                 "name": user.name,
                 "email": user.email,
                 "phone_number": user.phone_number,

@@ -1,13 +1,14 @@
 from datetime import datetime, timedelta, timezone
 
 from apiflask import HTTPError
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
 from ...models.users import User
 from ..auth.services import AuthService
 from ..books.service import BookService
 from ...extensions import db
 from ...models.loan import Loan
+from ...models.book import Book
 from ...models.fines import Fines
 
 DAILY_FINE_AMOUNT = 1
@@ -18,53 +19,95 @@ LIBRARIAN_EXTENSION_DAYS = 7
 
 
 class LoansService:
+
     @staticmethod
-    def get_history(requester_id, requester_roles, user_id):
-        try:
-            role_names = [r["role_name"] for r in requester_roles]
+    def get_loans(requester_id, requester_roles, search):
+        role = list(reversed(requester_roles))[0]
 
-            if "librarian" in role_names:
-                loans = db.session.execute(select(Loan)).scalars().all()
-            elif "user" in role_names:
-                if requester_id != user_id:
-                    return False, "Access denied"
-                loans = db.session.execute(
-                    select(Loan).filter_by(user_id=user_id)
-                ).scalars().all()
+        query = select(Loan).join(Loan.book).join(Loan.user)
+
+        if role["role_name"] == "user":
+            query = query.where(Loan.user_id == requester_id)
+
+        if search:
+            pattern = f"%{search}%"
+            conditions = [
+                Book.title.ilike(pattern),
+                Book.author.ilike(pattern),
+            ]
+
+            if role["role_name"] == "librarian" or role["role_name"] == "admin":
+                conditions.append(User.name.ilike(pattern))
+
+            query = query.where(or_(*conditions))
+
+        loans = db.session.execute(query).scalars().all()
+        result = []
+        for loan in loans:
+            if loan.return_date:
+                overdue_fine = None
             else:
-                return False, "Access denied"
+                overdue_days = max(0, (datetime.now() - loan.due_date).days)
+                overdue_fine = (
+                    overdue_days * DAILY_FINE_AMOUNT if overdue_days > 0 else None
+                )
 
-            result = []
-            for loan in loans:
-                if loan.return_date:
-                    overdue_fine = None
-                else:
-                    overdue_days = max(0, (datetime.now() - loan.due_date).days)
-                    overdue_fine = overdue_days * DAILY_FINE_AMOUNT if overdue_days > 0 else None
-
-                result.append({
+            result.append(
+                {
                     "loan_id": loan.loan_id,
                     "user_id": loan.user_id,
                     "book": {
                         "book_id": loan.book.book_id,
                         "title": loan.book.title,
-                        "author": loan.book.author
+                        "author": loan.book.author,
                     },
                     "start_date": loan.start_date,
                     "due_date": loan.due_date,
                     "return_date": loan.return_date,
                     "extension_count": loan.extension_count,
-                    "overdue_fine": overdue_fine
-                })
+                    "overdue_fine": overdue_fine,
+                }
+            )
+        return True, result
 
-            return True, result
-        except Exception as e:
-            return False, f"Failed to get history: {e}"
+    @staticmethod
+    def get_loan(requester_id, requester_roles, loan_id):
+        role = list(reversed(requester_roles))[0]
+
+        query = select(Loan).where(Loan.loan_id == loan_id)
+
+        if role["role_name"] == "user":
+            query = query.where(Loan.user_id == requester_id)
+
+        loan = db.session.execute(query).scalar_one_or_none()
+
+        if not loan:
+            return False, "Loan not found"
+
+        end_date = loan.return_date or datetime.now()
+        overdue_days = max(0, (end_date - loan.due_date).days)
+        overdue_fine = overdue_days * DAILY_FINE_AMOUNT
+
+        return True,  {
+            "loan_id": loan.loan_id,
+            "user_id": loan.user_id,
+            "book": {
+                "book_id": loan.book.book_id,
+                "title": loan.book.title,
+                "author": loan.book.author,
+            },
+            "start_date": loan.start_date,
+            "due_date": loan.due_date,
+            "return_date": loan.return_date,
+            "extension_count": loan.extension_count,
+            "overdue_fine": overdue_fine,
+        }
+
 
     @staticmethod
     def extend_loan(requester_id, requester_roles, loan_id):
         try:
-            role_names = [r["role_name"] for r in requester_roles]
+            role = list(reversed(requester_roles))[0]
 
             loan = db.session.execute(
                 select(Loan).filter_by(loan_id=loan_id)
@@ -73,9 +116,9 @@ class LoansService:
             if not loan:
                 return False, "Loan not found"
 
-            if "librarian" in role_names:
+            if role["role_name"] == "librarian":
                 extension_days = LIBRARIAN_EXTENSION_DAYS
-            elif "user" in role_names:
+            elif role["role_name"] == "user":
                 if loan.user_id != requester_id:
                     return False, "Access denied"
                 if loan.extension_count >= MAX_USER_EXTENSIONS:
@@ -100,8 +143,9 @@ class LoansService:
     @staticmethod
     def return_loan(requester_roles, loan_id):
         try:
-            role_names = [r["role_name"] for r in requester_roles]
-            if "librarian" not in role_names:
+            role = list(reversed(requester_roles))[0]
+
+            if role["role_name"] == "librarian":
                 return False, "Only librarians can process returns"
 
             loan = db.session.execute(
@@ -145,8 +189,8 @@ class LoansService:
     @staticmethod
     def fine_paid(requester_roles, loan_id):
         try:
-            role_names = [r["role_name"] for r in requester_roles]
-            if "librarian" not in role_names:
+            role = list(reversed(requester_roles))[0]
+            if role["role_name"] != "librarian":
                 return False, "Only librarians can mark fines as paid"
 
             fine = db.session.execute(
@@ -174,11 +218,9 @@ class LoansService:
         book = BookService.get_book_by_id(json_data["book_id"])
         current_user = AuthService.get_current_user()
         current_user_roles = AuthService.get_roles_by_user_id(current_user.user_id)
-        role_names = [role.role_name for role in current_user_roles]
+        role = list(reversed(current_user_roles))[0]
 
-        print(role_names)
-        print(current_user.name)
-        if ("librarian" not in role_names and "admin" not in role_names) and json_data["user_id"] != current_user.user_id:
+        if role["role_name"] == "user" and json_data["user_id"] != current_user.user_id:
             raise HTTPError(403, "Users can only create loans for themselves.")
         else:
             user = User.query.get(json_data["user_id"])
@@ -201,9 +243,11 @@ class LoansService:
                 extension_count = 0
             )
 
-            if book.quantity == 1:
-                book.is_available = False
-            book.quantity -= 1
+            if book.quantity > 0:
+                book.quantity -= 1
+
+            if book.quantity == 0:
+                book.is_available = False   
 
             db.session.add(loan)
             db.session.commit()

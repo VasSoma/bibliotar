@@ -15,3 +15,6 @@ class BookResponseSchema(Schema):
     quantity = fields.Integer()
     is_available = fields.Boolean()
     author = fields.String()
+
+class BookQuerySchema(Schema):
+    search = fields.String(load_default=None)
