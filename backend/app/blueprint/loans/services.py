@@ -214,13 +214,13 @@ class LoansService:
             return False, f"Failed to mark fine as paid: {e}"
 
     @staticmethod
-    def create_loan(json_data):
+    def create_loan(json_data, requester_id, requester_roles):
         book = BookService.get_book_by_id(json_data["book_id"])
         current_user = AuthService.get_current_user()
         current_user_roles = AuthService.get_roles_by_user_id(current_user.user_id)
-        role = list(reversed(current_user_roles))[0]
+        role = list(reversed(requester_roles))[0]
 
-        if role["role_name"] == "user" and json_data["user_id"] != current_user.user_id:
+        if role["role_name"] == "user" and json_data["user_id"] != requester_id:
             raise HTTPError(403, "Users can only create loans for themselves.")
         else:
             user = User.query.get(json_data["user_id"])
