@@ -10,7 +10,7 @@
 
     <ul v-else-if="loans.length">
       <li v-for="loan in loans" :key="loan.loan_id" @click="() => router.push(`/bookings/${loan.loan_id}`)"
-        style="border-bottom: 1px solid #ddd; padding: 10px 0;">
+        style="border-bottom: 1px solid #ddd; padding: 10px 0; cursor: pointer;">
         <strong>{{ loan.book.title }}</strong> - {{ loan.book.author }}
         <ul>
           <li>Kezdet: {{ formatDate(loan.start_date) }}</li>
@@ -21,6 +21,19 @@
             Büntetés: {{ loan.overdue_fine }} Ft
           </li>
         </ul>
+
+        <div style="margin-top: 10px;">
+          <button 
+            v-if="!loan.return_date && loan.extension_count < 2" 
+            @click.stop="extendLoan(loan.loan_id)"
+            class="extend-btn"
+          >
+            Hosszabbítás (+14 nap)
+          </button>
+          <span v-else-if="!loan.return_date && loan.extension_count >= 2" style="color: gray; font-size: 0.9em;">
+            Maximális hosszabbítás elérve.
+          </span>
+        </div>
 
       </li>
     </ul>
@@ -51,6 +64,27 @@ const fetchLoans = async () => {
   }
 };
 
+// ÚJ RÉSZ: Hosszabbítás API hívás
+const extendLoan = async (loanId) => {
+  try {
+    // Feltételezem, hogy a backend végpontod valami ilyesmi lett: /loans/<id>/extend
+    await apiClient.post(`/loans/${loanId}/extend`);
+    alert('A kölcsönzési időt sikeresen meghosszabbítottuk!');
+    
+    // Lista újratöltése, hogy frissüljön a határidő és a számláló
+    fetchLoans();
+  } catch (error) {
+    console.error('Hiba a hosszabbítás során:', error);
+    
+    // Ha a backend valamilyen hibaüzenetet küld (pl. 400 Bad Request), azt itt kiírhatod
+    if (error.response && error.response.data && error.response.data.message) {
+      alert(`Hiba: ${error.response.data.message}`);
+    } else {
+      alert('Váratlan hiba történt a hosszabbítás során.');
+    }
+  }
+};
+
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';
   return new Date(dateStr).toLocaleDateString('hu-HU');
@@ -60,10 +94,3 @@ onMounted(() => {
   fetchLoans();
 });
 </script>
-
-
-<style>
-.search-container {
-  margin: 12px 0;
-}
-</style>
