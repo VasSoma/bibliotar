@@ -6,7 +6,7 @@ def load_private_key():
         return f.read()
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = "postgresql://postgres.audkhglijhnoiikgqrgj:Bibliotar123?@aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
+    SQLALCHEMY_DATABASE_URI = "sqlite:///mydb.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = load_private_key()
     JWT_EXPIRATION_MINUTES = 30

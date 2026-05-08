@@ -1,5 +1,6 @@
 from apiflask import APIFlask
-from flask import render_template
+from flask_migrate import Migrate
+
 from .config import Config
 from .extensions import db
 from flask_cors import CORS
@@ -12,16 +13,11 @@ def create_app(config_class=Config):
 
     app.config.from_object(config_class) # setup flask with config.py
 
-    db.init_app(app) # flask + database connection
-
-    # from flask_migrate import Migrate
-    # migrate = Migrate(app,db) # helper, modify database if smt changed
+    # Initialize db
+    db.init_app(app)
+    migrate = Migrate(app,db)
 
     from .blueprint import bp as main_bp
     app.register_blueprint(main_bp, url_prefix='/api')
-
-    # @app.get('/')
-    # def index():
-    #     return render_template('index.html')
 
     return app
