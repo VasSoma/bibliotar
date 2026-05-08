@@ -16,79 +16,21 @@ import { ROLES } from '@/consts/role.const'
 import AccessDeniedPage from '@/pages/AccessDenied.page.vue'
 
 const publicRoutes = [
-  {
-    path: '/login',
-    name: 'login',
-    component: LoginPage,
-  },
-  {
-    path: '/register',
-    name: 'register',
-    component: RegisterPage,
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'not-found',
-    component: NotFoundPage,
-  },
+  { path: '/login', name: 'login', component: LoginPage },
+  { path: '/register', name: 'register', component: RegisterPage },
+  { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundPage },
 ]
 
 const privateRoutes = [
-  {
-    path: '',
-    name: 'home',
-    component: HomePage,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/books',
-    name: 'books',
-    component: BookListPage,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/books/:id',
-    name: 'book-details',
-    component: BookDetailsPage,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/books/new',
-    name: 'book-new',
-    component: EditBookPage,
-    meta: { requiresAuth: true, roles: [ROLES.ADMIN] },
-  },
-  {
-    path: '/books/:id/edit',
-    name: 'book-edit',
-    component: EditBookPage,
-    meta: { requiresAuth: true, roles: [ROLES.ADMIN] },
-  },
-  {
-    path: '/bookings',
-    name: 'bookings',
-    component: BookingListPage,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/bookings/:id',
-    name: 'booking-details',
-    component: BookingDetailsPage,
-    meta: { requiresAuth: true },
-  },
-
-  {
-    path: '/profile',
-    name: 'profile',
-    component: ProfilePage,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/access-denied',
-    name: 'access-denied',
-    component: AccessDeniedPage,
-    meta: { requiresAuth: true },
-  },
+  { path: '', name: 'home', component: HomePage, meta: { requiresAuth: true } },
+  { path: '/books', name: 'books', component: BookListPage, meta: { requiresAuth: true } },
+  { path: '/books/:id', name: 'book-details', component: BookDetailsPage, meta: { requiresAuth: true } },
+  { path: '/books/new', name: 'book-new', component: EditBookPage, meta: { requiresAuth: true, roles: [ROLES.ADMIN] } },
+  { path: '/books/:id/edit', name: 'book-edit', component: EditBookPage, meta: { requiresAuth: true, roles: [ROLES.ADMIN] } },
+  { path: '/bookings', name: 'bookings', component: BookingListPage, meta: { requiresAuth: true } },
+  { path: '/bookings/:id', name: 'booking-details', component: BookingDetailsPage, meta: { requiresAuth: true } },
+  { path: '/profile', name: 'profile', component: ProfilePage, meta: { requiresAuth: true } },
+  { path: '/access-denied', name: 'access-denied', component: AccessDeniedPage, meta: { requiresAuth: true } },
 ]
 
 const router = createRouter({
@@ -96,25 +38,26 @@ const router = createRouter({
   routes: [...publicRoutes, ...privateRoutes],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from) => {
   const auth = useAuthStore()
 
-  // not logged in
+  if (localStorage.getItem('token') && !auth.user) {
+    await auth.fetchUser()
+  }
+
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    return next('/login')
+    return '/login'
   }
 
-  // role check
   if (to.meta.roles && !auth.hasRole(to.meta.roles)) {
-    return next('/access-denied') // or 403 page
+    return '/access-denied'
   }
 
-  // go to home from public routes when user is authenticated
   if (auth.isAuthenticated && publicRoutes.map((r) => r.path).includes(to.path)) {
-    next('/books')
+    return '/books'
   }
 
-  next()
+  return true 
 })
 
 export default router

@@ -1,95 +1,117 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { apiClient } from '@/api-client/api.client'
-import { useAuthStore } from '@/stores/auth'
+import { apiClient } from '@/api-client/api.client';
+import { useAuthStore } from '@/stores/auth';
+import { onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute()
-const loanId = route.params.id
-const loan = ref(null)
+const router = useRouter()
+const bookId = route.params.id
+const book = ref(null)
+
+const targetUserEmail = ref('') 
+
 const authStore = useAuthStore()
 
 onMounted(async () => {
-  fetchLoan()
+    fetchBook()
 })
 
-async function fetchLoan() {
-  const { data } = await apiClient.get(`/loans/${loanId}`)
-  loan.value = data
+async function onHandleEdit() {
+    router.push(`/books/${bookId}/edit`)
 }
 
-async function returnBook() {
-  try {
-    await apiClient.post(`/loans/${loan.value.loan_id}/returned`);
-    alert('Sikeres visszavitel!');
-    fetchLoan();
-  } catch (error) {
-    alert(error.response?.data?.message || 'Nem sikerült a visszavitel.');
-  }
-};
+async function onHandleDelete() {
+    if(confirm("Biztosan törölni szeretnéd ezt a könyvet?")) {
+        try {
+            await apiClient.delete(`/books/${bookId}`)
+            router.push('/books')
+        } catch(error) {
+            alert('Törlés sikertelen. A backend a hibás!');
+        }
+    }
+}
 
-async function extendLoan() {
-  try {
-    await apiClient.post(`/loans/${loan.value.loan_id}/extend`);
-    alert('Sikeres hosszabbítás!');
-    fetchLoan();
-  } catch (error) {
-    alert(error.response?.data?.message || 'Nem sikerült a hosszabbítás.');
-  }
-};
+async function fetchBook() {
+    try {
+        const response = await apiClient.get(`/books/${bookId}`)
+        book.value = response.data
+    } catch(error) {
+        console.error("A backend a hibás!")
+    }
+}
 
-async function finePaid() {
-  try {
-    await apiClient.post(`/loans/${loan.value.loan_id}/fine_paid`);
-    alert('Sikeres fizetés!');
-    fetchLoan();
-  } catch (error) {
-    alert(error.response?.data?.message || 'Nem sikerült a fizetés.');
-  }
-};
+// Sima User kölcsönzés
+async function rentBookAsUser() {
+    try {
+        await apiClient.post('/loans/history/create', {
+            book_id: Number(bookId),
+            user_id: Number(authStore.userId)
+        });
+        alert('Sikeres kölcsönzés!');
+        fetchBook();
+    } catch (error) {
+        alert('Sikertelen tranzakció. A backend a hibás!');
+    }
+}
 
+async function rentBookAsLibrarian() {
+    try {
+        await apiClient.post('/loans/history/create', {
+            book_id: Number(bookId),
+            user_email: targetUserEmail.value 
+        });
+        alert('Sikeres kiadás!');
+        fetchBook();
+        targetUserEmail.value = ''; 
+    } catch (error) {
+        alert('Hiba a kiadáskor! Valószínűleg a backend a hibás, mer');
+    }
+}
 </script>
 
 <template>
-  <div v-if="loan">
-    <h1>Kölcsönzés részletei</h1>
-    <p><strong>Kölcsönzés ID:</strong> {{ loan.loan_id }}</p>
-    <p><strong>Cím:</strong> {{ loan.book.title }}</p>
-    <p><strong>Szerző:</strong> {{ loan.book.author }}</p>
-    <p><strong>Kezdés dátuma:</strong> {{ loan.start_date }}</p>
-    <p><strong>Határidő:</strong> {{ loan.due_date }}</p>
-    <p><strong>Hosszabbítások száma:</strong> {{ loan.extension_count }}</p>
-    <p v-if="loan.return_date"><strong>Visszahozva:</strong> {{ loan.return_date }}</p>
-    <p><strong>Hosszabbítások száma:</strong> {{ loan.extension_count }} / 2</p>
-    <strong>
-      <p v-if="loan.overdue_fine" class="fine">Büntetés: {{ loan.overdue_fine }} Ft</p>
-    </strong>
-    <div v-if="authStore.user.role === 'librarian'" class="button-container">
-      <button @click="extendLoan()" :disabled="loan.return_date || loan.extension_count >= 2">
-        Hosszabbítás
-      </button>
+    <div v-if="book" class="book-details">
+        <h1>Könyv részletei</h1>
+        <p><strong>Cím:</strong> {{ book.title }}</p>
+        <p><strong>Szerző:</strong> {{ book.author }}</p>
+        <p><strong>Mennyiség:</strong> {{ book.quantity }}</p>
+        <p><strong>Elérhető:</strong> {{ book.is_available ? 'Igen' : 'Nem' }}</p>
+        
+        <div class="button-container" style="margin-top: 20px;">
+            <button v-if="authStore.user?.role === 'admin'" @click="onHandleEdit">Szerkesztés</button>
+            <button v-if="authStore.user?.role === 'admin'" @click="onHandleDelete" style="background-color: #ff4d4d; color: white;">Törlés</button>
+            
+            <button 
+                v-if="authStore.user?.role === 'user'" 
+                @click="rentBookAsUser" 
+                :disabled="!book.is_available || !authStore.isAuthenticated">
+                Kölcsönzés
+            </button>
 
-      <button @click="returnBook()" :disabled="loan.return_date" style="margin-left: 10px;">
-        Visszahozatal
-      </button>
-
-      <button @click="finePaid()" :disabled="!loan.overdue_fine" style="margin-left: 10px;">
-        Büntetés fizetve
-      </button>
+            <div v-if="authStore.user?.role === 'librarian'" class="librarian-section" style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;">
+                <h4>Könyvtárosi kiadás</h4>
+                <input 
+                    v-model="targetUserEmail" 
+                    type="email" 
+                    placeholder="Felhasználó email címe" 
+                    style="margin-right: 10px; width: 250px;"
+                />
+                <button 
+                    @click="rentBookAsLibrarian" 
+                    :disabled="!book.is_available || !targetUserEmail">
+                    Kiadás email alapján
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
-  <p v-else>Betöltés...</p>
+    <p v-else>Betöltés...</p>
 </template>
-
 
 <style>
 .button-container {
-  display: flex;
-  gap: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
-
-.fine {
-  color: red;
-}
-
 </style>
