@@ -26,7 +26,8 @@ class BookService:
     @staticmethod
     def create_book(json_data):
         book = Book.query.where(json_data["isbn"] == Book.isbn).first()
-        if not book:
+        print(book)
+        if book:
             raise HTTPError(409, "Book already exists with same ISBN.")
 
         try:
