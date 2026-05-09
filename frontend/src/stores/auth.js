@@ -5,7 +5,7 @@ import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
-  const isAuthenticated = computed(() => !!user.value)
+  const isAuthenticated = computed(() => !!user.value || !!localStorage.getItem('token'))
   const error = ref(null)
 
   const login = async (credentials) => {
@@ -16,23 +16,29 @@ export const useAuthStore = defineStore('auth', () => {
       router.push('/books')
     } catch (err) {
       error.value = 'Invalid email or password.'
+      throw err
     }
   }
 
   const register = async (payload) => {
     try {
       await apiClient.post('/auth/register', payload)
-    } catch (error) {
+    } catch (err) {
       error.value = 'Cannot register user right now.'
+      throw err
     }
   }
 
   const logout = async () => {
-    await apiClient.post('/auth/logout')
-
-    localStorage.removeItem('token')
-    user.value = null
-    router.push('/login')
+    try {
+      await apiClient.post('/auth/logout')
+    } catch (err) {
+      console.warn("Kijelentkezési hiba a szerveren, de helyben törlünk mindent.", err)
+    } finally {
+      localStorage.removeItem('token')
+      user.value = null
+      router.push('/login')
+    }
   }
 
   const fetchUser = async () => {
@@ -41,6 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = res.data
     } catch {
       user.value = null
+      localStorage.removeItem('token')
       router.push('/login')
     }
   }
@@ -49,7 +56,9 @@ export const useAuthStore = defineStore('auth', () => {
     if (!requiredRoles?.length) {
       return true
     }
-
+    if (!user.value) {
+      return false 
+    }
     return requiredRoles.includes(user.value.role)
   }
 
