@@ -14,11 +14,13 @@ import NotFoundPage from '@/pages/NotFound.page.vue'
 import EditBookPage from '@/pages/EditBook.page.vue'
 import { ROLES } from '@/consts/role.const'
 import AccessDeniedPage from '@/pages/AccessDenied.page.vue'
+import SystemTestPage from '@/pages/SystemTest.page.vue'
 
 const publicRoutes = [
   { path: '/login', name: 'login', component: LoginPage },
   { path: '/register', name: 'register', component: RegisterPage },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundPage },
+  { path: '/teszt', name: 'teszt', component: SystemTestPage },
 ]
 
 const privateRoutes = [
