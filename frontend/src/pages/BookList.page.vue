@@ -4,6 +4,9 @@
     <div class="search-container">
       Kereses: <input type="text" v-model="search" @input="fetchBooks()" />
     </div>
+    <button v-if="authStore.user?.role === 'admin'" @click="router.push('/books/new')" style="margin-bottom: 12px;">
+      + Új könyv hozzáadása
+    </button>
     <div v-if="loading">Betöltés...</div>
     <div v-else-if="books.length">
       <!-- A backend a listában 'book_id' néven adja az azonosítót -->
@@ -23,8 +26,10 @@
 import { ref, onMounted } from 'vue';
 import { apiClient } from '../api-client/api.client';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 
 const router = useRouter()
+const authStore = useAuthStore()
 const books = ref([]);
 const loading = ref(false);
 const search = ref("");
