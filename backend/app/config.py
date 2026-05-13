@@ -9,4 +9,4 @@ class Config:
     SQLALCHEMY_DATABASE_URI = "sqlite:///mydb.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = load_private_key()
-    JWT_EXPIRATION_MINUTES = 30
+    JWT_EXPIRATION_MINUTES = 300
