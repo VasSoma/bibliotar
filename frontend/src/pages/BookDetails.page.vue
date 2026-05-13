@@ -8,7 +8,7 @@ const route = useRoute()
 const router = useRouter()
 const bookId = route.params.id
 const book = ref(null)
-const targetUserId = ref('') 
+const targetUserEmail = ref('')
 const authStore = useAuthStore()
 
 onMounted(async () => {
@@ -33,24 +33,42 @@ async function onHandleDelete() {
 }
 
 async function fetchBook() {
-    const response = await apiClient.get(`/books/${bookId}`)
-    book.value = response.data
+    try {
+        const response = await apiClient.get(`/books/${bookId}`)
+        book.value = response.data
+    } catch (error) {
+        console.error('Könyv betöltési hiba:', error);
+        alert('Nem sikerült betölteni a könyv adatait.');
+    }
 }
 
-async function rentBook(userIdToRent) {
-    if (!userIdToRent || isNaN(userIdToRent)) {
-        alert("Hiba: Érvénytelen vagy hiányzó felhasználói azonosító!");
-        return;
-    }
-
+async function rentBookAsUser() {
     try {
-        await apiClient.post('/loans/history/create', {
+        await apiClient.post('/loans', {
             book_id: Number(bookId),
-            user_id: Number(userIdToRent)
+            user_id: authStore.user?.user_id
         });
         alert('Sikeres kölcsönzés!');
         fetchBook();
-        targetUserId.value = '';
+    } catch (error) {
+        console.error('Szerver hiba:', error.response?.data);
+        alert('Hiba: ' + (error.response?.data?.message || 'Sikertelen tranzakció'));
+    }
+}
+
+async function rentBookAsLibrarian() {
+    if (!targetUserEmail.value) {
+        alert('Hiba: Adj meg egy email címet!');
+        return;
+    }
+    try {
+        await apiClient.post('/loans', {
+            book_id: Number(bookId),
+            user_email: targetUserEmail.value
+        });
+        alert('Sikeres kiadás!');
+        fetchBook();
+        targetUserEmail.value = '';
     } catch (error) {
         console.error('Szerver hiba:', error.response?.data);
         alert('Hiba: ' + (error.response?.data?.message || 'Sikertelen tranzakció'));
@@ -72,24 +90,24 @@ async function rentBook(userIdToRent) {
             <button v-if="authStore.user?.role === 'admin'" @click="onHandleEdit">Szerkesztés</button>
             <button v-if="authStore.user?.role === 'admin'" @click="onHandleDelete" style="background-color: #ff4d4d; color: white;">Törlés</button>
             
-            <button 
-                v-if="authStore.user?.role === 'user'" 
-                @click="rentBook(authStore.userId)" 
+            <button
+                v-if="authStore.user?.role === 'user'"
+                @click="rentBookAsUser"
                 :disabled="!book.is_available || !authStore.isAuthenticated">
                 Kölcsönzés
             </button>
 
             <div v-if="authStore.user?.role === 'librarian'" class="librarian-section" style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;">
                 <h4>Könyvtárosi kiadás</h4>
-                <input 
-                    v-model="targetUserId" 
-                    type="number" 
-                    placeholder="Felhasználó ID-ja" 
-                    style="margin-right: 10px;"
+                <input
+                    v-model="targetUserEmail"
+                    type="email"
+                    placeholder="Felhasználó email címe"
+                    style="margin-right: 10px; width: 250px;"
                 />
-                <button 
-                    @click="rentBook(targetUserId)" 
-                    :disabled="!book.is_available || !targetUserId">
+                <button
+                    @click="rentBookAsLibrarian"
+                    :disabled="!book.is_available || !targetUserEmail">
                     Kiadás felhasználónak
                 </button>
             </div>
