@@ -4,7 +4,6 @@ from apiflask import HTTPError
 from sqlalchemy import select, or_
 
 from ...models.users import User
-from ..auth.services import AuthService
 from ..books.service import BookService
 from ...extensions import db
 from ...models.loan import Loan
@@ -26,7 +25,7 @@ class LoansService:
 
         query = select(Loan).join(Loan.book).join(Loan.user)
 
-        if role["role_name"] == "user":
+        if role["role_name"] != "librarian":
             query = query.where(Loan.user_id == requester_id)
 
         if search:
@@ -36,26 +35,33 @@ class LoansService:
                 Book.author.ilike(pattern),
             ]
 
-            if role["role_name"] == "librarian" or role["role_name"] == "admin":
+            if role["role_name"] == "librarian":
                 conditions.append(User.name.ilike(pattern))
+                conditions.append(User.email.ilike(pattern))
 
             query = query.where(or_(*conditions))
 
         loans = db.session.execute(query).scalars().all()
         result = []
         for loan in loans:
-            if loan.return_date:
-                overdue_fine = None
-            else:
-                overdue_days = max(0, (datetime.now() - loan.due_date).days)
-                overdue_fine = (
-                    overdue_days * DAILY_FINE_AMOUNT if overdue_days > 0 else None
-                )
+            end_date = loan.return_date or datetime.now(timezone.utc)
+            overdue_days = max(0, (end_date.replace(tzinfo=None) - loan.due_date.replace(tzinfo=None)).days)
+            overdue_fine = overdue_days * DAILY_FINE_AMOUNT if overdue_days > 0 else None
+
+            fine = db.session.execute(
+                select(Fines).filter_by(loan_id=loan.loan_id)
+            ).scalar_one_or_none()
+            fine_is_paid = fine.is_paid if fine else None
 
             result.append(
                 {
                     "loan_id": loan.loan_id,
                     "user_id": loan.user_id,
+                    "user": {
+                        "user_id": loan.user.user_id,
+                        "name": loan.user.name,
+                        "email": loan.user.email,
+                    },
                     "book": {
                         "book_id": loan.book.book_id,
                         "title": loan.book.title,
@@ -66,6 +72,7 @@ class LoansService:
                     "return_date": loan.return_date,
                     "extension_count": loan.extension_count,
                     "overdue_fine": overdue_fine,
+                    "fine_is_paid": fine_is_paid,
                 }
             )
         return True, result
@@ -84,13 +91,23 @@ class LoansService:
         if not loan:
             return False, "Loan not found"
 
-        end_date = loan.return_date or datetime.now()
-        overdue_days = max(0, (end_date - loan.due_date).days)
-        overdue_fine = overdue_days * DAILY_FINE_AMOUNT
+        end_date = loan.return_date or datetime.now(timezone.utc)
+        overdue_days = max(0, (end_date.replace(tzinfo=None) - loan.due_date.replace(tzinfo=None)).days)
+        overdue_fine = overdue_days * DAILY_FINE_AMOUNT if overdue_days > 0 else None
 
-        return True,  {
+        fine = db.session.execute(
+            select(Fines).filter_by(loan_id=loan.loan_id)
+        ).scalar_one_or_none()
+        fine_is_paid = fine.is_paid if fine else None
+
+        return True, {
             "loan_id": loan.loan_id,
             "user_id": loan.user_id,
+            "user": {
+                "user_id": loan.user.user_id,
+                "name": loan.user.name,
+                "email": loan.user.email,
+            },
             "book": {
                 "book_id": loan.book.book_id,
                 "title": loan.book.title,
@@ -101,6 +118,7 @@ class LoansService:
             "return_date": loan.return_date,
             "extension_count": loan.extension_count,
             "overdue_fine": overdue_fine,
+            "fine_is_paid": fine_is_paid,
         }
 
 
@@ -145,7 +163,7 @@ class LoansService:
         try:
             role = list(reversed(requester_roles))[0]
 
-            if role["role_name"] == "librarian":
+            if role["role_name"] != "librarian":
                 return False, "Only librarians can process returns"
 
             loan = db.session.execute(
@@ -158,9 +176,13 @@ class LoansService:
             if loan.return_date:
                 return False, "Loan already returned"
 
-            loan.return_date = datetime.now()
+            loan.return_date = datetime.now(timezone.utc)
 
-            overdue_days = max(0, (loan.return_date - loan.due_date).days)
+            loan.book.quantity += 1
+            if loan.book.quantity > 0:
+                loan.book.is_available = True
+
+            overdue_days = max(0, (loan.return_date.replace(tzinfo=None) - loan.due_date.replace(tzinfo=None)).days)
             if overdue_days > 0:
                 fine = db.session.execute(
                     select(Fines).filter_by(loan_id=loan_id, is_paid=False)
@@ -216,40 +238,76 @@ class LoansService:
     @staticmethod
     def create_loan(json_data, requester_id, requester_roles):
         book = BookService.get_book_by_id(json_data["book_id"])
-        current_user = AuthService.get_current_user()
-        current_user_roles = AuthService.get_roles_by_user_id(current_user.user_id)
         role = list(reversed(requester_roles))[0]
 
-        if role["role_name"] == "user" and json_data["user_id"] != requester_id:
-            raise HTTPError(403, "Users can only create loans for themselves.")
-        else:
-            user = User.query.get(json_data["user_id"])
+        user_id = json_data.get("user_id")
+        user_email = json_data.get("user_email")
+
+        if role["role_name"] == "user":
+            target_user_id = requester_id
+        elif user_email:
+            user = db.session.execute(
+                select(User).filter_by(email=user_email)
+            ).scalar_one_or_none()
+            if not user:
+                raise HTTPError(404, "User not found with this email.")
+            target_user_id = user.user_id
+        elif user_id:
+            user = User.query.get(user_id)
             if not user:
                 raise HTTPError(404, "User not found.")
-
-        if not book:
-            raise HTTPError(404, "Book does not exist.")
-        elif not book.is_available:
-            raise HTTPError(404, "Book is not available.")
+            target_user_id = user_id
         else:
-            now = datetime.now(timezone.utc)
+            raise HTTPError(400, "user_id or user_email is required.")
 
-            loan = Loan(
-                user_id = json_data["user_id"],
-                book_id = json_data["book_id"],
-                start_date = now,
-                due_date = now + timedelta(days=7),
-                return_date = None,
-                extension_count = 0
+        existing = db.session.execute(
+            select(Loan).where(
+                Loan.user_id == target_user_id,
+                Loan.book_id == json_data["book_id"],
+                Loan.return_date == None
             )
+        ).scalar_one_or_none()
 
-            if book.quantity > 0:
-                book.quantity -= 1
+        if existing:
+            raise HTTPError(409, "A felhasználónak már van aktív kölcsönzése ebből a könyvből.")
 
-            if book.quantity == 0:
-                book.is_available = False   
+        overdue_loan = db.session.execute(
+            select(Loan).where(
+                Loan.user_id == target_user_id,
+                Loan.return_date == None,
+                Loan.due_date < datetime.now(timezone.utc).replace(tzinfo=None)
+            )
+        ).scalar_one_or_none()
 
-            db.session.add(loan)
-            db.session.commit()
+        if overdue_loan:
+            raise HTTPError(403, "A felhasználónak lejárt kölcsönzése van. Új könyvet nem vehet ki amíg nem hozza vissza.")
+
+        unpaid_fine = db.session.execute(
+            select(Fines).filter_by(user_id=target_user_id, is_paid=False)
+        ).scalar_one_or_none()
+
+        if unpaid_fine:
+            raise HTTPError(403, "A felhasználónak rendezetlen bírsága van. Új könyvet nem lehet kivenni amíg nincs rendezve.")
+
+        if not book.is_available or book.quantity <= 0:
+            raise HTTPError(409, "Book is not available.")
+
+        now = datetime.now(timezone.utc)
+
+        loan = Loan(
+            user_id=target_user_id,
+            book_id=json_data["book_id"],
+            start_date=now,
+            due_date=now + timedelta(days=7),
+            return_date=None,
+            extension_count=0
+        )
+
+        book.quantity -= 1
+        if book.quantity == 0:
+            book.is_available = False
+
+        db.session.add(loan)
+        db.session.commit()
 
         return loan
