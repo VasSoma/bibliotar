@@ -2,23 +2,25 @@
   <div>
     <h1>Könyvkatalógus</h1>
     <div class="search-container">
-      Kereses: <input type="text" v-model="search" @input="fetchBooks()" />
+      Keresés: <input type="text" v-model="search" @input="fetchBooks()" />
     </div>
-    <button v-if="authStore.user?.role === 'admin'" @click="router.push('/books/new')" style="margin-bottom: 12px;">
+    <button v-if="authStore.user?.role === 'admin'" class="btn-add" @click="router.push('/books/new')">
       + Új könyv hozzáadása
     </button>
     <div v-if="loading">Betöltés...</div>
     <div v-else-if="books.length">
-      <!-- A backend a listában 'book_id' néven adja az azonosítót -->
-      <div v-for="book in books" :key="book.book_id" @click="() => router.push(`/books/${book.book_id}`)"
-        style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+      <div
+        v-for="book in books"
+        :key="book.book_id"
+        class="book-card"
+        @click="() => router.push(`/books/${book.book_id}`)"
+      >
         <h3>{{ book.title }}</h3>
-        <p>Szerző: {{ book.author }}</p>
-        <p>Mennyiség: {{ book.quantity }}</p>
-
+        <p><strong>Szerző:</strong> {{ book.author }}</p>
+        <p><strong>Mennyiség:</strong> {{ book.quantity }}</p>
       </div>
     </div>
-    <p v-else>Nincs talalat a konyvekre</p>
+    <p v-else>Nincs találat a könyvekre</p>
   </div>
 </template>
 
@@ -49,8 +51,33 @@ const fetchBooks = async () => {
 onMounted(fetchBooks);
 </script>
 
-<style>
+<style scoped>
 .search-container {
   margin: 12px 0;
+}
+
+.btn-add {
+  margin-bottom: 12px;
+}
+
+.book-card {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.book-card:hover {
+  background-color: #f5f5f5;
+}
+
+.book-card h3 {
+  margin: 0 0 6px 0;
+}
+
+.book-card p {
+  margin: 2px 0;
 }
 </style>
