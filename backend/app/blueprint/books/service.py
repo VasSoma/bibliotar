@@ -76,7 +76,8 @@ class BookService:
             db.session.delete(book)
             db.session.commit()
             return "", 204
-        except:
+        except Exception:
+            db.session.rollback()
             raise HTTPError(500, "Failed to delete book.")
 
 
