@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import current_app, request
 from sqlalchemy import select
 from authlib.jose import jwt
@@ -16,7 +16,7 @@ class AuthService:
         payload = {
             "user_id": user.user_id,
             "roles": RoleSchema().dump(user.roles, many=True),
-            "exp": int((datetime.now() + timedelta(minutes=current_app.config["JWT_EXPIRATION_MINUTES"])).timestamp())
+            "exp": int((datetime.now(timezone.utc) + timedelta(minutes=current_app.config["JWT_EXPIRATION_MINUTES"])).timestamp())
         }
         return jwt.encode({'alg': 'RS256'}, payload, current_app.config['SECRET_KEY']).decode()
 
