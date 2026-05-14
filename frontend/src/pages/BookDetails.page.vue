@@ -86,10 +86,10 @@ async function rentBookAsLibrarian() {
         <p><strong>Mennyiség:</strong> {{ book.quantity }}</p>
         <p><strong>Elérhető:</strong> {{ book.is_available ? 'Igen' : 'Nem' }}</p>
         
-        <div class="button-container" style="margin-top: 20px;">
+        <div class="button-container">
             <button v-if="authStore.user?.role === 'admin'" @click="onHandleEdit">Szerkesztés</button>
-            <button v-if="authStore.user?.role === 'admin'" @click="onHandleDelete" style="background-color: #ff4d4d; color: white;">Törlés</button>
-            
+            <button v-if="authStore.user?.role === 'admin'" class="btn-danger" @click="onHandleDelete">Törlés</button>
+
             <button
                 v-if="authStore.user?.role === 'user'"
                 @click="rentBookAsUser"
@@ -97,13 +97,13 @@ async function rentBookAsLibrarian() {
                 Kölcsönzés
             </button>
 
-            <div v-if="authStore.user?.role === 'librarian'" class="librarian-section" style="border: 1px solid #ccc; padding: 10px; margin-top: 10px;">
+            <div v-if="authStore.user?.role === 'librarian'" class="librarian-section">
                 <h4>Könyvtárosi kiadás</h4>
                 <input
                     v-model="targetUserEmail"
                     type="email"
                     placeholder="Felhasználó email címe"
-                    style="margin-right: 10px; width: 250px;"
+                    class="librarian-email-input"
                 />
                 <button
                     @click="rentBookAsLibrarian"
@@ -116,10 +116,32 @@ async function rentBookAsLibrarian() {
     <p v-else>Betöltés...</p>
 </template>
 
-<style>
+<style scoped>
+.book-details p {
+    margin: 4px 0;
+}
+
 .button-container {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-danger {
+    background-color: #ff4d4d;
+    color: white;
+}
+
+.librarian-section {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 4px;
+}
+
+.librarian-email-input {
+    margin-right: 10px;
+    width: 250px;
 }
 </style>
