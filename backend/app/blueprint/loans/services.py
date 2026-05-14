@@ -134,19 +134,22 @@ class LoansService:
             if not loan:
                 return False, "Loan not found"
 
+            if loan.return_date:
+                return False, "Cannot extend a returned loan"
+
             if role["role_name"] == "librarian":
                 extension_days = LIBRARIAN_EXTENSION_DAYS
+                loan.due_date = loan.due_date + timedelta(days=extension_days)
             elif role["role_name"] == "user":
                 if loan.user_id != requester_id:
                     return False, "Access denied"
                 if loan.extension_count >= MAX_USER_EXTENSIONS:
                     return False, f"Maximum {MAX_USER_EXTENSIONS} extensions allowed"
                 extension_days = USER_EXTENSION_DAYS
+                loan.due_date = loan.due_date + timedelta(days=extension_days)
+                loan.extension_count += 1
             else:
                 return False, "Access denied"
-
-            loan.due_date = loan.due_date + timedelta(days=extension_days)
-            loan.extension_count += 1
             db.session.commit()
 
             return True, {
@@ -178,8 +181,9 @@ class LoansService:
 
             loan.return_date = datetime.now(timezone.utc)
 
+            was_at_zero = loan.book.quantity == 0
             loan.book.quantity += 1
-            if loan.book.quantity > 0:
+            if was_at_zero:
                 loan.book.is_available = True
 
             overdue_days = max(0, (loan.return_date.replace(tzinfo=None) - loan.due_date.replace(tzinfo=None)).days)
