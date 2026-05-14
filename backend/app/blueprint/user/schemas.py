@@ -42,7 +42,7 @@ class RoleRequestSchema(Schema):
 
 class SetRoleResponseSchema(Schema):
     user_id = fields.Integer()
-    roles = fields.List(fields.String)
+    roles = fields.List(fields.String())
 
 class DeleteRoleRequestSchema(Schema):
     user_id = fields.Integer()
