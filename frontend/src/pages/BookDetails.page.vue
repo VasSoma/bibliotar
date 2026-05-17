@@ -93,7 +93,7 @@ async function rentBookAsLibrarian() {
             <button
                 v-if="authStore.user?.role === 'user'"
                 @click="rentBookAsUser"
-                :disabled="!book.is_available || !authStore.isAuthenticated">
+                :disabled="!book.is_available || book.quantity <= 0 || !authStore.isAuthenticated">
                 Kölcsönzés
             </button>
 
@@ -107,7 +107,7 @@ async function rentBookAsLibrarian() {
                 />
                 <button
                     @click="rentBookAsLibrarian"
-                    :disabled="!book.is_available || !targetUserEmail">
+                    :disabled="!book.is_available || book.quantity <= 0 || !targetUserEmail">
                     Kiadás felhasználónak
                 </button>
             </div>
