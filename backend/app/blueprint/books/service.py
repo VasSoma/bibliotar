@@ -31,11 +31,12 @@ class BookService:
             raise HTTPError(409, "Book already exists with same ISBN.")
 
         try:
+            quantity = json_data["quantity"]
             new_book = Book(
                 title=json_data["title"],
                 isbn=json_data["isbn"],
-                quantity=json_data["quantity"],
-                is_available=json_data.get("is_available", True),
+                quantity=quantity,
+                is_available=False if quantity == 0 else json_data.get("is_available", True),
                 author=json_data["author"],
             )
 
@@ -58,6 +59,9 @@ class BookService:
         try:
             for key, value in json_data.items():
                 setattr(book, key, value)
+
+            if book.quantity == 0:
+                book.is_available = False
 
             # NOTE: innen johet error
             db.session.commit()
