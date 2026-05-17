@@ -8,7 +8,7 @@ class Book(db.Model):
 
     book_id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(200))
-    isbn: Mapped[str] = mapped_column(String(20))
+    isbn: Mapped[str] = mapped_column(String(20), unique=True)
     quantity: Mapped[int] = mapped_column()
     is_available: Mapped[Optional[bool]] = mapped_column()
     author: Mapped[Optional[str]] = mapped_column(String(150))

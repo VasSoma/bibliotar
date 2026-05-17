@@ -1,5 +1,5 @@
 import functools
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import current_app
 from apiflask import APIBlueprint, HTTPError
 from authlib.jose import jwt
@@ -9,7 +9,7 @@ from ..extensions import auth as _auth
 def verify_token(token):
     try:
         data = jwt.decode(token.encode('ascii'), current_app.config['SECRET_KEY'])
-        if data["exp"] < int(datetime.now().timestamp()):
+        if data["exp"] < int(datetime.now(timezone.utc).timestamp()):
             return None  # exp token
         return data      # auth.current_user (payload dict)
     except Exception:

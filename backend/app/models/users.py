@@ -26,7 +26,7 @@ class User(db.Model):
     password_hashed : Mapped[str] = mapped_column(String(255))
     phone_number : Mapped[Optional[str]] = mapped_column(String(15))
     name : Mapped[str] = mapped_column(String(100))
-    email : Mapped[str] = mapped_column(String(255))
+    email : Mapped[str] = mapped_column(String(255), unique=True)
 
     addresses : Mapped[List["Home_address"]] = relationship(
         secondary=UserAddress,

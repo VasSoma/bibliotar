@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import current_app, request
 from sqlalchemy import select
 from authlib.jose import jwt
@@ -16,7 +16,7 @@ class AuthService:
         payload = {
             "user_id": user.user_id,
             "roles": RoleSchema().dump(user.roles, many=True),
-            "exp": int((datetime.now() + timedelta(minutes=current_app.config["JWT_EXPIRATION_MINUTES"])).timestamp())
+            "exp": int((datetime.now(timezone.utc) + timedelta(minutes=current_app.config["JWT_EXPIRATION_MINUTES"])).timestamp())
         }
         return jwt.encode({'alg': 'RS256'}, payload, current_app.config['SECRET_KEY']).decode()
 
@@ -122,12 +122,11 @@ class AuthService:
         if not role:
             raise HTTPError(404, "Role does not exist.")
 
-        role_ids = [role.role_id for role in user.roles]
+        role_ids = [r.role_id for r in user.roles]
         if json_data["role_id"] not in role_ids:
             raise HTTPError(404, "User is not associated with the specified role.")
 
-        role_obj = Role.query.get(json_data["role_id"])
-        user.roles.remove(role_obj)
+        user.roles.remove(role)
         db.session.commit()
 
         return "", 204
